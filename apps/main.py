@@ -1,8 +1,20 @@
 from fastapi import FastAPI
+from db_health_adapter import DbHealthPort, SqlAlchemyAsyncDbHealthAdapter
+from database import AsyncSessionLocal, DB_UNAVAILABLE_DETAIL
 from doro.app.doro_director import DoroDirector
 from titanic.app.james_controller import JamesController
 
 app = FastAPI(title="cloverky Main Page")
+
+_db_health: DbHealthPort = SqlAlchemyAsyncDbHealthAdapter(
+    AsyncSessionLocal,
+    DB_UNAVAILABLE_DETAIL,
+)
+
+
+@app.get("/db-check")
+async def check_db() -> dict:
+    return await _db_health.check()
 
 @app.get("/")
 def read_root():
