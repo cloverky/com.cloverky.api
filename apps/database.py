@@ -10,13 +10,17 @@ from sqlalchemy.orm import declarative_base
 logger = logging.getLogger(__name__)
 
 DB_UNAVAILABLE_DETAIL = (
-    "DATABASE_URL이 설정되지 않았거나 엔진 초기화에 실패했습니다. 저장소 루트의 .env를 확인하세요."
+    "DATABASE_URL이 설정되지 않았거나 엔진 초기화에 실패했습니다. "
+    "저장소 루트의 .env 또는 사용자 홈 디렉터리의 .env를 확인하세요."
 )
 
-# database.py 위치: .../backend/apps/ → 저장소 루트는 parents[4]
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+# database.py 위치: .../backend/apps/database.py → 저장소 루트는 parents[2]
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_HOME_ENV = Path.home() / ".env"
+
 load_dotenv(_REPO_ROOT / ".env")
 load_dotenv()
+load_dotenv(_HOME_ENV, override=True)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = None
@@ -35,8 +39,9 @@ if not DATABASE_URL:
     logger.warning(
         "DATABASE_URL이 없습니다. /db-check는 오류 JSON을 반환하고, "
         "get_db를 쓰는 다른 엔드포인트는 503을 반환합니다. "
-        "설정: %s",
+        "확인할 설정 파일: %s 또는 %s (후자가 있으면 같은 키는 덮어씁니다).",
         _REPO_ROOT / ".env",
+        _HOME_ENV,
     )
 else:
     try:
