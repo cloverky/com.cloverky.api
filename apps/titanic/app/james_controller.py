@@ -35,3 +35,9 @@ class JamesController:
     def get_training_model_accuracy(self):
         return self.jack.get_training_model_accuracy()
 
+    def get_model_name_and_accuracy(self) -> dict:
+        return {
+            "model": self.get_training_model_name(),
+            "accuracy": self.get_training_model_accuracy(),
+        }
+

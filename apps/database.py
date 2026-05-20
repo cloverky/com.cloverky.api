@@ -1,76 +1,125 @@
-import logging
+"""
+SQLAlchemy 2.0 모던 스타일 — Neon Postgres 비동기 접속 모듈.
+
+- FastAPI 에서는 `engine`, `AsyncSessionLocal`, `get_db`, `Base`, `dispose_engine` 을
+  import 해서 사용합니다.
+- `python -m fridge.models.database` 로 직접 실행하면 Neon DB 접속 확인 + users 테이블 조회 데모가
+  실행됩니다.
+"""
+
+from __future__ import annotations
+
+import asyncio
 import os
-from collections.abc import AsyncGenerator
+import selectors
+import sys
 from pathlib import Path
 
+# Windows uvicorn/psycopg async 호환
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import declarative_base
-
-logger = logging.getLogger(__name__)
-
-DB_UNAVAILABLE_DETAIL = (
-    "DATABASE_URL이 설정되지 않았거나 엔진 초기화에 실패했습니다. "
-    "저장소 루트의 .env 또는 사용자 홈 디렉터리의 .env를 확인하세요."
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
+from sqlalchemy.orm import DeclarativeBase
 
-# database.py 위치: .../backend/apps/database.py → 저장소 루트는 parents[2]
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-_HOME_ENV = Path.home() / ".env"
+# fridge/models/database.py 기준: backend/.env -> apps/.env -> apps/titanic/.env 순으로 로드
+_MODELS_DIR = Path(__file__).resolve().parent
+_FRIDGE_DIR = _MODELS_DIR.parent
+_APPS_DIR = _FRIDGE_DIR.parent
+_BACKEND_ROOT = _APPS_DIR.parent
 
-load_dotenv(_REPO_ROOT / ".env")
-load_dotenv()
-load_dotenv(_HOME_ENV, override=True)
+load_dotenv(_BACKEND_ROOT / ".env")
+load_dotenv(_APPS_DIR / ".env")
+load_dotenv(_APPS_DIR / "titanic" / ".env")
+
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-engine = None
-AsyncSessionLocal: async_sessionmaker[AsyncSession] | None = None
-
-
-def _normalize_database_url(raw_url: str) -> str:
-    # psycopg2 기본 해석을 피하고, requirements에 있는 psycopg 드라이버를 사용한다.
-    if raw_url.startswith("postgres://"):
-        return "postgresql+psycopg://" + raw_url[len("postgres://") :]
-    if raw_url.startswith("postgresql://") and "+psycopg" not in raw_url:
-        return "postgresql+psycopg://" + raw_url[len("postgresql://") :]
-    return raw_url
-
 if not DATABASE_URL:
-    logger.warning(
-        "DATABASE_URL이 없습니다. /db-check는 오류 JSON을 반환하고, "
-        "get_db를 쓰는 다른 엔드포인트는 503을 반환합니다. "
-        "확인할 설정 파일: %s 또는 %s (후자가 있으면 같은 키는 덮어씁니다).",
-        _REPO_ROOT / ".env",
-        _HOME_ENV,
+    raise RuntimeError(
+        "DATABASE_URL 이 설정되지 않았습니다. "
+        f"{_BACKEND_ROOT / '.env'}, {_APPS_DIR / '.env'}, {_APPS_DIR / 'titanic' / '.env'} "
+        "중 한 곳에 DATABASE_URL=... 를 넣어 주세요.",
     )
-else:
-    try:
-        normalized_database_url = _normalize_database_url(DATABASE_URL)
-        if normalized_database_url != DATABASE_URL:
-            logger.info("DATABASE_URL 드라이버를 psycopg로 보정했습니다.")
-        engine = create_async_engine(normalized_database_url, echo=True)
-        AsyncSessionLocal = async_sessionmaker(
-            bind=engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-        )
-    except Exception:
-        logger.exception("비동기 DB 엔진 생성에 실패했습니다.")
-        engine = None
-        AsyncSessionLocal = None
-
-Base = declarative_base()
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    from fastapi import HTTPException
+class Base(DeclarativeBase):
+    pass
 
-    if AsyncSessionLocal is None:
-        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
+
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    connect_args={"connect_timeout": 10},
+    pool_timeout=10,
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+
+async def get_db():
     async with AsyncSessionLocal() as session:
+        yield session
+
+
+async def dispose_engine() -> None:
+    await engine.dispose()
+
+
+def _mask_dsn(dsn: str) -> str:
+    if "@" in dsn:
+        head, tail = dsn.split("@", 1)
+        if "://" in head and ":" in head.split("://", 1)[1]:
+            scheme, rest = head.split("://", 1)
+            user, _ = rest.split(":", 1)
+            return f"{scheme}://{user}:***@{tail}"
+    return dsn
+
+
+async def main() -> None:
+    from models.user import User
+
+    print(f"[Neon] connect to: {_mask_dsn(DATABASE_URL)}")
+
+    async with engine.connect() as conn:
+        now = (await conn.execute(text("SELECT NOW()"))).scalar_one()
+        version = (await conn.execute(text("SELECT version()"))).scalar_one()
+        print(f"[Neon] server time : {now}")
+        print(f"[Neon] server ver  : {version}")
+
+    async with AsyncSessionLocal() as session:
+        stmt = select(User).order_by(User.id).limit(5)
+        result = await session.execute(stmt)
+        users = list(result.scalars().all())
+
+        print(f"[Neon] users rows (top 5) : {len(users)}")
+        for u in users:
+            print(
+                f"  - id={u.id} username={u.username!r} "
+                f"name={u.name!r} email={u.email!r} role={u.role!r}",
+            )
+
+    await dispose_engine()
+    print("[Neon] done.")
+
+
+if __name__ == "__main__":
+    if sys.platform.startswith("win"):
+        loop = asyncio.SelectorEventLoop(selectors.SelectSelector())
+        asyncio.set_event_loop(loop)
         try:
-            yield session
-        except Exception:
-            await session.rollback()
-            logger.exception("DB 세션 처리 중 오류가 발생했습니다.")
-            raise
+            loop.run_until_complete(main())
+        finally:
+            loop.close()
+    else:
+        asyncio.run(main())
