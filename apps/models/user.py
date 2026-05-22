@@ -29,6 +29,11 @@ class User(EntityIdMixin, Base):
         server_default=UserRole.USER.value,
     )
     agree_terms: Mapped[bool] = mapped_column(Boolean, default=True)
+    default_storage: Mapped[str] = mapped_column(
+        String(20),
+        default="냉장",
+        server_default="냉장",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

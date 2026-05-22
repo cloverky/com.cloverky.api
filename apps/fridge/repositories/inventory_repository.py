@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fridge.models.inventory_model import FridgeInventory
+from fridge.models.inventory import FridgeInventory
 from fridge.schemas.inventory_schema import InventoryCreate
 
 
@@ -18,7 +18,7 @@ class InventoryRepository:
         r = await db.execute(select(FridgeInventory).where(FridgeInventory.id == inventory_id).limit(1))
         return r.scalar_one_or_none()
 
-    async def create(self, db: AsyncSession, data: InventoryCreate) -> FridgeInventory:
+    async def add(self, db: AsyncSession, data: InventoryCreate) -> FridgeInventory:
         row = FridgeInventory(
             user_id=data.user_id,
             food_id=data.food_id,
@@ -30,6 +30,11 @@ class InventoryRepository:
             storage=data.storage.strip() or "냉장",
         )
         db.add(row)
-        await db.commit()
+        await db.flush()
         await db.refresh(row)
+        return row
+
+    async def create(self, db: AsyncSession, data: InventoryCreate) -> FridgeInventory:
+        row = await self.add(db, data)
+        await db.commit()
         return row

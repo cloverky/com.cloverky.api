@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fridge.models.category_model import FridgeCategory
+from fridge.models.category import FridgeCategory
 from fridge.schemas.category_schema import CategoryCreate
 
 
@@ -14,9 +14,20 @@ class CategoryRepository:
         r = await db.execute(select(FridgeCategory).where(FridgeCategory.id == category_id).limit(1))
         return r.scalar_one_or_none()
 
-    async def create(self, db: AsyncSession, data: CategoryCreate) -> FridgeCategory:
+    async def get_by_name(self, db: AsyncSession, name: str) -> FridgeCategory | None:
+        r = await db.execute(
+            select(FridgeCategory).where(FridgeCategory.name == name.strip()).limit(1),
+        )
+        return r.scalar_one_or_none()
+
+    async def add(self, db: AsyncSession, data: CategoryCreate) -> FridgeCategory:
         row = FridgeCategory(name=data.name.strip(), sort_order=data.sort_order)
         db.add(row)
-        await db.commit()
+        await db.flush()
         await db.refresh(row)
+        return row
+
+    async def create(self, db: AsyncSession, data: CategoryCreate) -> FridgeCategory:
+        row = await self.add(db, data)
+        await db.commit()
         return row

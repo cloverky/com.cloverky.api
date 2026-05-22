@@ -8,7 +8,6 @@ Create Date: 2026-05-19 16:40:00.000000
 
 from typing import Sequence, Union
 
-import sqlalchemy as sa
 from alembic import op
 
 revision: str = "a1b2c3d4e5f6"
@@ -18,7 +17,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("age", sa.Integer(), nullable=True))
+    # create_all 등으로 이미 age 가 있을 수 있음 (Neon 등)
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER")
 
 
 def downgrade() -> None:

@@ -17,7 +17,7 @@ class FridgeInventory(EntityIdMixin, Base):
         index=True,
     )
     food_id: Mapped[int] = mapped_column(
-        ForeignKey("fridge_foods.id", ondelete="CASCADE"),
+        ForeignKey("foods.id", ondelete="CASCADE"),
         index=True,
     )
     quantity: Mapped[int] = mapped_column(Integer, default=1, server_default="1")

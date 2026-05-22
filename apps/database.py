@@ -3,8 +3,8 @@ SQLAlchemy 2.0 모던 스타일 — Neon Postgres 비동기 접속 모듈.
 
 - FastAPI 에서는 `engine`, `AsyncSessionLocal`, `get_db`, `Base`, `dispose_engine` 을
   import 해서 사용합니다.
-- `python -m fridge.models.database` 로 직접 실행하면 Neon DB 접속 확인 + users 테이블 조회 데모가
-  실행됩니다.
+- `python database.py` 로 직접 실행하면 Neon DB 접속 확인 + users 테이블 조회 데모가
+  실행됩니다. (작업 디렉터리: `backend/apps`)
 """
 
 from __future__ import annotations
@@ -28,10 +28,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
-# fridge/models/database.py 기준: backend/.env -> apps/.env -> apps/titanic/.env 순으로 로드
-_MODELS_DIR = Path(__file__).resolve().parent
-_FRIDGE_DIR = _MODELS_DIR.parent
-_APPS_DIR = _FRIDGE_DIR.parent
+# apps/database.py 기준: backend/.env -> apps/.env -> apps/titanic/.env 순으로 로드
+_APPS_DIR = Path(__file__).resolve().parent
 _BACKEND_ROOT = _APPS_DIR.parent
 
 load_dotenv(_BACKEND_ROOT / ".env")

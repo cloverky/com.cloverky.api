@@ -1,5 +1,5 @@
-from titanic.app.walter_reader import WalterReader
-from titanic.app.rose_model import RoseModel
+from titanic.app.repositories.walter_reader import WalterReader
+from titanic.app.models.rose_model import RoseModel
 
 _DEFAULT_TRAINING_MODEL_NAME = "DecisionTreeClassifier"
 

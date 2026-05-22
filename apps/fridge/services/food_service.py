@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fridge.models.food_model import FridgeFood
+from fridge.models.food import FridgeFood
 from fridge.repositories.food_repository import FoodRepository
 from fridge.schemas.food_schema import FoodCreate
 

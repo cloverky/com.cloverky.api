@@ -13,7 +13,7 @@ class FridgeFood(EntityIdMixin, Base):
     __tablename__ = "foods"
 
     category_id: Mapped[int] = mapped_column(
-        ForeignKey("fridge_categories.id", ondelete="RESTRICT"),
+        ForeignKey("categories.id", ondelete="RESTRICT"),
         index=True,
     )
     name: Mapped[str] = mapped_column(String(200), index=True)

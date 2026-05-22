@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fridge.models.category_model import FridgeCategory
+from fridge.models.category import FridgeCategory
 from fridge.repositories.category_repository import CategoryRepository
 from fridge.schemas.category_schema import CategoryCreate
 

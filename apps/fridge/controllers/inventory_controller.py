@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fridge.models.inventory_model import FridgeInventory
+from fridge.models.inventory import FridgeInventory
 from fridge.schemas.inventory_schema import InventoryCreate
 from fridge.services.inventory_service import InventoryService
 

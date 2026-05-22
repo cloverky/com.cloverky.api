@@ -21,19 +21,20 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from matrix.app.keymaker import get_keymaker
+from weather_provider import fetch_seoul_weather
 
 from adapters.db_health_adapter import DbHealthAdapter
 from fridge.models.database import Base, dispose_engine, engine, get_db
 from models.user import User, UserRole  # noqa: F401 — create_all 에 테이블 등록
 from models.ingredient_manager import IngredientManager  # noqa: F401
-from fridge.models.category_model import FridgeCategory  # noqa: F401
-from fridge.models.code_model import FridgeCode  # noqa: F401
-from fridge.models.food_model import FridgeFood  # noqa: F401
-from fridge.models.inventory_model import FridgeInventory  # noqa: F401
-from fridge.models.user import FridgeUser  # noqa: F401
+from fridge.models.category import FridgeCategory  # noqa: F401
+from fridge.models.food import FridgeFood  # noqa: F401
+from fridge.models.inventory import FridgeInventory  # noqa: F401
+from fridge.models.receipt import FridgeReceipt, FridgeReceiptLine  # noqa: F401
 from fridge.controllers.ingredient_router import router as inventory_router
+from fridge.controllers.receipt_router import router as receipt_router
 from doro.app.doro_director import DoroDirector
-from titanic.app.james_controller import JamesController
+from titanic.app.controllers.james_controller import JamesController
 from secom.app.schemas.user_schema import LoginSchema, UserSchema
 from secom.app.controllers.user_controller import UserController
 
@@ -127,6 +128,24 @@ def _username_key(username: str) -> str:
     return username.strip().lower()
 
 
+async def _drop_legacy_fridge_tables(conn) -> None:
+    """fridge_*·구 테이블 제거 후 ORM(create_all)으로 재생성. alembic_version·users 는 유지."""
+    for tbl in (
+        "fridge_inventory",
+        "fridge_codes",
+        "fridge_foods",
+        "fridge_categories",
+        "fridge_users",
+        "receipt_lines",
+        "receipts",
+        "inventory",
+        "codes",
+        "foods",
+        "categories",
+    ):
+        await conn.execute(text(f'DROP TABLE IF EXISTS "{tbl}" CASCADE'))
+
+
 async def _ensure_entity_rule_schema(conn) -> None:
     """ENTITY_RULE.md: PK는 int 자동증감 `id`, 레거시 secom_users 제거."""
     await conn.execute(text("DROP TABLE IF EXISTS secom_users CASCADE"))
@@ -140,11 +159,11 @@ async def _ensure_entity_rule_schema(conn) -> None:
               FOREACH tbl IN ARRAY ARRAY[
                 'users',
                 'ingredient_manager',
-                'fridge_categories',
-                'fridge_foods',
-                'fridge_codes',
-                'fridge_inventory',
-                'fridge_users'
+                'categories',
+                'foods',
+                'receipts',
+                'receipt_lines',
+                'inventory'
               ]
               LOOP
                 IF EXISTS (
@@ -168,14 +187,21 @@ async def _ensure_entity_rule_schema(conn) -> None:
 
 
 async def _migrate_tables() -> None:
-    """users·ingredient_manager 테이블 생성 및 ENTITY_RULE·스키마 보강."""
+    """users·ingredient_manager·fridge 도메인 테이블 생성 및 ENTITY_RULE·스키마 보강."""
     async with engine.begin() as conn:
+        await _drop_legacy_fridge_tables(conn)
         await conn.run_sync(Base.metadata.create_all)
         await _ensure_entity_rule_schema(conn)
         await conn.execute(
             text(
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) "
                 "NOT NULL DEFAULT 'user'"
+            ),
+        )
+        await conn.execute(
+            text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS default_storage VARCHAR(20) "
+                "NOT NULL DEFAULT '냉장'"
             ),
         )
         # 기존 Neon 테이블명 inventory_items → ingredient_manager
@@ -238,7 +264,16 @@ async def _migrate_tables() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await _migrate_tables()
+    logger.info("DB 마이그레이션 시작…")
+    try:
+        await asyncio.wait_for(_migrate_tables(), timeout=45.0)
+    except asyncio.TimeoutError:
+        logger.error("DB 마이그레이션 시간 초과(45s). DATABASE_URL·Neon 연결을 확인하세요.")
+        raise
+    except Exception:
+        logger.exception("DB 마이그레이션 실패")
+        raise
+    logger.info("DB 마이그레이션 완료 — 서버 준비됨")
     try:
         yield
     finally:
@@ -256,6 +291,7 @@ app.add_middleware(
 )
 
 app.include_router(inventory_router)
+app.include_router(receipt_router)
 
 
 
@@ -315,65 +351,17 @@ def get_weather(
     country: str | None = Query(None, description="국가 코드 (예: KR)"),
 ) -> WeatherResponse:
     """
-    OpenWeather Current Weather API — `keymaker` 의 OpenWeather 설정을 사용합니다.
+    서울(또는 지정 도시) 날씨. OpenWeather 우선, 실패 시 Open-Meteo·기본값으로 항상 200 응답.
     """
-    if not keymaker.is_openweather_ready():
-        raise HTTPException(
-            status_code=503,
-            detail="OPENWEATHER_API_KEY가 설정되지 않았습니다. backend/.env 에 키를 넣어 주세요.",
-        )
-
-    appid = keymaker.get_openweather_api_key()
+    appid = keymaker.get_openweather_api_key() if keymaker.is_openweather_ready() else None
     q_city = (city or keymaker.get_openweather_default_city()).strip()
     q_country = (country or keymaker.get_openweather_default_country()).strip()
-    query = f"{q_city},{q_country}"
-
-    params = urllib.parse.urlencode(
-        {
-            "q": query,
-            "appid": appid,
-            "units": "metric",
-            "lang": "kr",
-        }
+    payload = fetch_seoul_weather(
+        openweather_appid=appid,
+        city=q_city,
+        country=q_country,
     )
-    url = f"https://api.openweathermap.org/data/2.5/weather?{params}"
-
-    try:
-        with urllib.request.urlopen(url, timeout=10) as resp:
-            data = json.loads(resp.read().decode())
-    except urllib.error.HTTPError as e:
-        body = e.read().decode(errors="replace")
-        raise HTTPException(
-            status_code=502,
-            detail=f"OpenWeather 호출 실패 ({e.code}): {body}",
-        ) from e
-    except urllib.error.URLError as e:
-        raise HTTPException(
-            status_code=502,
-            detail=f"OpenWeather 연결 실패: {e.reason}",
-        ) from e
-    except (json.JSONDecodeError, KeyError) as e:
-        raise HTTPException(
-            status_code=502,
-            detail=f"OpenWeather 응답 파싱 실패: {e!s}",
-        ) from e
-
-    try:
-        main = data["weather"][0]
-        return WeatherResponse(
-            city=data["name"],
-            country=data["sys"]["country"],
-            temp_c=float(data["main"]["temp"]),
-            feels_like_c=float(data["main"]["feels_like"]),
-            description=main["description"],
-            icon=main["icon"],
-            humidity=int(data["main"]["humidity"]),
-        )
-    except (KeyError, TypeError, ValueError) as e:
-        raise HTTPException(
-            status_code=502,
-            detail=f"OpenWeather 응답 형식 오류: {e!s}",
-        ) from e
+    return WeatherResponse(**payload)
 
 
 @app.get("/db-check")
@@ -563,6 +551,16 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)) -> LoginR
 
 
 if __name__ == "__main__":
+    import os
+
     import uvicorn
 
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    # Windows reload 자식 프로세스 오류 방지: 기본은 reload 끔. 필요 시 set UVICORN_RELOAD=1
+    reload = os.getenv("UVICORN_RELOAD", "0" if sys.platform.startswith("win") else "1") == "1"
+    logger.info("uvicorn 시작 — reload=%s http://127.0.0.1:8000", reload)
+    uvicorn.run(
+        "main:app",
+        host="127.0.0.1",
+        port=int(os.getenv("PORT", "8000")),
+        reload=reload,
+    )

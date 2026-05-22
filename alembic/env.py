@@ -48,6 +48,11 @@ def _get_sync_database_url() -> str:
 
 # 모델 메타데이터 — autogenerate 용
 from fridge.models.database import Base  # noqa: E402
+from fridge.models.category import FridgeCategory  # noqa: F401
+from fridge.models.food import FridgeFood  # noqa: F401
+from fridge.models.receipt import FridgeReceipt, FridgeReceiptLine  # noqa: F401
+from fridge.models.inventory import FridgeInventory  # noqa: F401
+from models.ingredient_manager import IngredientManager  # noqa: F401
 from models.user import User  # noqa: E402, F401
 
 target_metadata = Base.metadata

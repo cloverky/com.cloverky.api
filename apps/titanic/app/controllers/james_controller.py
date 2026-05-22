@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 
 from pathlib import Path
-from titanic.app.jack_service import JackService
-from titanic.app.walter_reader import WalterReader
+from titanic.app.services.jack_service import JackService
+from titanic.app.repositories.walter_reader import WalterReader
 
 app = FastAPI(title="Titanic (James)")
 _DATA_DIR = Path(__file__).resolve().parent
-_MODEL_PATH = _DATA_DIR / "titanic_decision_tree.joblib"
+_MODEL_PATH = _DATA_DIR.parent / "models" / "titanic_decision_tree.joblib"
 
 class JamesController:
     def __init__(self):

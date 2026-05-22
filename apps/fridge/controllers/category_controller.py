@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fridge.models.category_model import FridgeCategory
+from fridge.models.category import FridgeCategory
 from fridge.schemas.category_schema import CategoryCreate
 from fridge.services.category_service import CategoryService
 
