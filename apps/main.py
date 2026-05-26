@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import re
+import selectors
 import sys
 
 # Windows: psycopg async + uvicorn 시 DB 요청이 멈추는 문제 방지
@@ -558,9 +559,20 @@ if __name__ == "__main__":
     # Windows reload 자식 프로세스 오류 방지: 기본은 reload 끔. 필요 시 set UVICORN_RELOAD=1
     reload = os.getenv("UVICORN_RELOAD", "0" if sys.platform.startswith("win") else "1") == "1"
     logger.info("uvicorn 시작 — reload=%s http://127.0.0.1:8000", reload)
-    uvicorn.run(
-        "main:app",
-        host="127.0.0.1",
-        port=int(os.getenv("PORT", "8000")),
-        reload=reload,
-    )
+    host = "127.0.0.1"
+    port = int(os.getenv("PORT", "8000"))
+
+    if sys.platform.startswith("win") and not reload:
+        loop = asyncio.SelectorEventLoop(selectors.SelectSelector())
+        asyncio.set_event_loop(loop)
+        config = uvicorn.Config(app, host=host, port=port, loop="asyncio")
+        server = uvicorn.Server(config)
+        loop.run_until_complete(server.serve())
+    else:
+        uvicorn.run(
+            "main:app",
+            host=host,
+            port=port,
+            reload=reload,
+            loop="asyncio",
+        )
