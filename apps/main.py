@@ -14,9 +14,7 @@ import urllib.request
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,8 +32,7 @@ from fridge.models.inventory import FridgeInventory  # noqa: F401
 from fridge.models.receipt import FridgeReceipt, FridgeReceiptLine  # noqa: F401
 from fridge.controllers.ingredient_router import router as inventory_router
 from fridge.controllers.receipt_router import router as receipt_router
-from doro.app.doro_director import DoroDirector
-from titanic.app.controllers.james_controller import JamesController
+from titanic.adapter.inbound.api.v1.titanic_query_router import titanic_router as titanic_query_router
 from secom.app.schemas.user_schema import LoginSchema, UserSchema
 from secom.app.controllers.user_controller import UserController
 
@@ -293,6 +290,7 @@ app.add_middleware(
 
 app.include_router(inventory_router)
 app.include_router(receipt_router)
+app.include_router(titanic_query_router)
 
 
 
@@ -368,62 +366,6 @@ def get_weather(
 @app.get("/db-check")
 async def check_db(db: AsyncSession = Depends(get_db)):
     return await DbHealthAdapter.neon_time_check(db)
-
-
-@app.get("/titanic/data")
-def read_titanic_data():
-    james = JamesController()
-    df = james.get_data()
-
-    return df.to_dict(orient="records")
-
-
-@app.get("/titanic/count")
-def read_titanic_count():
-    james = JamesController()
-    count = james.get_count()
-
-    return {"count": count}
-
-
-@app.get("/titanic/tree")
-def read_titanic_tree():
-    james = JamesController()
-    tree = james.has_decision_tree_model()
-
-    return {"tree": tree}
-
-
-@app.get("/titanic/count/survived")
-def read_titanic_count_survived():
-    james = JamesController()
-    count = james.get_count_survived()
-
-    return {"count": count}
-
-
-@app.get("/titanic/count/not_survived")
-def read_titanic_count_not_survived():
-    james = JamesController()
-    count = james.get_count_not_survived()
-
-    return {"count": count}
-
-
-@app.get("/titanic/model")
-def read_titanic_model():
-    controller = JamesController()
-    model_name = controller.get_model_name_and_accuracy()
-    return JSONResponse(content=jsonable_encoder(model_name))
-
-
-@app.get("/doro/data")
-def read_doro_data():
-    doro_director = DoroDirector()
-    df = doro_director.get_data()
-
-    return df.to_dict(orient="records")
-
 
 # 회원가입 · 로그인 (Neon DB — 비밀번호 해시 저장)
 @app.get("/signup/check-username", response_model=UsernameCheckResponse)

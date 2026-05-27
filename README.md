@@ -24,16 +24,11 @@ com.ragwatson/
 │   │   ├── pericles.py
 │   │   ├── zeno_of_citium.py
 │   │   └── demosthenes.py
-│   ├── doro/                       # 한국도로공사 교통사고 통계 분석 (FastAPI)
-│   │   └── app/
-│   │       ├── doro_reader.py      # CSV 로더 (cp949/euc-kr 폴백)
-│   │       └── doro_director.py    # FastAPI 앱
 │   └── titanic/                    # Titanic 생존 예측 (FastAPI + Decision Tree)
 │       └── app/
 │           ├── james_controller.py # 컨트롤러 ("제임스가 메인이다")
 │           ├── jack_service.py     # 서비스: 학습 모델 메타정보
 │           ├── rose_model.py       # 모델 로더 (joblib)
-│           ├── walter_reader.py    # Titanic-Dataset.csv 로더
 │           └── caledon_validation.py
 ├── docs/                           # Obsidian vault (강의 메모 + 프로젝트 정리)
 ├── www/                            # (예약)
@@ -68,17 +63,9 @@ com.ragwatson/
 | James (James Cameron) | **Controller** — API 엔드포인트 진입점 |
 | Jack | **Service** — 비즈니스 로직, 모델 메타 조회 |
 | Rose | **Model** — 학습된 의사결정 트리 (joblib) 로더 |
-| Walter (Walter Lord, *A Night to Remember*) | **Reader** — CSV 적재 및 집계 |
 | Caledon (Cal Hockley) | **Validation** — 입력 검증 (예정) |
 
 키 프레이즈: **"제임스가 메인이다."** (컨트롤러 = 진입점)
-
-### 도로 (`agora/doro/app/`)
-
-| 이름 | 역할 |
-|---|---|
-| DoroReader | 공공데이터 CSV 로더 (인코딩 폴백 포함) |
-| DoroDirector | FastAPI 앱 + 디렉터 패턴 |
 
 ---
 
@@ -89,11 +76,10 @@ com.ragwatson/
 - **Python 3.13** *(.pyc 캐시 기준 추정)*
 - **FastAPI** — 웹 프레임워크
 - **Uvicorn** — ASGI 서버
-- **pandas** — 데이터 적재/집계
 - **joblib** — 학습 모델 직렬화/로드
 - **scikit-learn** — Decision Tree *(joblib 모델 파일 기준 추정, 직접 import는 없음)*
 
-> ⚠ 현재 저장소에 `requirements.txt` / `pyproject.toml`이 **없다**. 셋업 시 아래 명령을 참고하라.
+> 의존성은 `requirements.txt` 기준으로 설치한다.
 
 ---
 
@@ -106,13 +92,13 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-### 2. 의존성 설치 *(requirements.txt가 없으므로 우선 직접 설치)*
+### 2. 의존성 설치
 
 ```powershell
-pip install fastapi uvicorn pandas scikit-learn joblib
+pip install -r requirements.txt
 ```
 
-> 향후 `requirements.txt` 또는 `pyproject.toml`로 고정할 것. (자세한 셋업 절차는 [`docs/수업 메모/FastAPI + Unicorn 설치 & 실행.md`](./docs/수업%20메모/FastAPI%20%2B%20Unicorn%20%EC%84%A4%EC%B9%98%20%26%20%EC%8B%A4%ED%96%89.md) 참조.)
+> 자세한 셋업 절차는 [`docs/수업 메모/FastAPI + Unicorn 설치 & 실행.md`](./docs/수업%20메모/FastAPI%20%2B%20Unicorn%20%EC%84%A4%EC%B9%98%20%26%20%EC%8B%A4%ED%96%89.md) 참조.
 
 ---
 
@@ -128,23 +114,11 @@ python -m uvicorn titanic.app.james_controller:app --reload --host 127.0.0.1 --p
 확인:
 - http://127.0.0.1:8000/docs — 자동 생성된 Swagger UI
 
-### Doro API
-
-```powershell
-cd agora
-python -m uvicorn doro.app.doro_director:app --reload --host 127.0.0.1 --port 8001
-```
-
-> 두 앱은 서로 다른 포트로 동시에 띄울 수 있다.
-
 ---
 
 ## 데이터셋
 
-| 위치 | 출처/설명 |
-|---|---|
-| `agora/titanic/app/Titanic-Dataset.csv` | Kaggle Titanic 공개 데이터셋 |
-| `agora/doro/app/한국도로공사_교통사고통계_20241231.csv` | 공공데이터포털 (한국도로공사) |
+프로젝트 내부 CSV 파일을 서버가 직접 읽는 구조는 제거되었다. Titanic 실습 데이터는 프론트엔드 `/lesson` 화면에서 사용자가 업로드한다.
 
 ---
 

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field, field_validator
 from typing import Optional
+
+from pydantic import BaseModel, Field, field_validator
+
 
 class TitanicPassengerSchema(BaseModel):
     PassengerId: int = Field(..., description="승객 고유 ID")

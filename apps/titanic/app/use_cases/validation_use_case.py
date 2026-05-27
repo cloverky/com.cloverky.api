@@ -1,5 +1,7 @@
 from typing import Any, Dict
-from titanic.app.schemas.passenger_schema import TitanicPassengerSchema
+
+from titanic.app.dtos.passenger_schema import TitanicPassengerSchema
+
 
 class CaledonValidation:
     """Rose's fiancé Caledon Hockley checking/validating the passenger list."""
