@@ -1,8 +1,21 @@
+from pathlib import Path
+
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from titanic.app.controllers.james_controller import JamesController
+try:
+    from titanic.app.use_cases._james_command import JamesController
+except ModuleNotFoundError:
+    _DATA_DIR = Path(__file__).resolve().parents[4] / "app"
+    _MODEL_PATH = _DATA_DIR.parent / "models" / "titanic_decision_tree.joblib"
+
+    class JamesController:  # type: ignore[no-redef]
+        def has_decision_tree_model(self):
+            return _MODEL_PATH.exists()
+
+        def get_model_name_and_accuracy(self) -> dict:
+            return {"model": "DecisionTreeClassifier", "accuracy": None}
 
 titanic_router = APIRouter(prefix="/titanic", tags=["titanic"])
 

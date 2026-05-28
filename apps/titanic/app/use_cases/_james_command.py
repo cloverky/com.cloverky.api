@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from pathlib import Path
-from titanic.app.use_cases.jack_service import JackService
+from titanic.app.use_cases.train_use_case import JackService
 
 app = FastAPI(title="Titanic (James)")
 _DATA_DIR = Path(__file__).resolve().parent
