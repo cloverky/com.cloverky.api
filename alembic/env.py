@@ -54,6 +54,7 @@ from fridge.models.receipt import FridgeReceipt, FridgeReceiptLine  # noqa: F401
 from fridge.models.inventory import FridgeInventory  # noqa: F401
 from models.ingredient_manager import IngredientManager  # noqa: F401
 from models.user import User  # noqa: E402, F401
+from titanic.adapter.outbound.orm.titanic_passenger_model import TitanicPassengerModel  # noqa: F401
 
 target_metadata = Base.metadata
 
