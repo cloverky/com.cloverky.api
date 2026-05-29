@@ -5,11 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from titanic.app.ports.input.walter_use_case import WalterUseCase
+from titanic.app.use_cases.walter_query import WalterQuery
 
 logger = logging.getLogger(__name__)
 
 walter_router = APIRouter(prefix="/titanic/walter", tags=["walter"])
-walter_use_case = WalterUseCase()
+walter_use_case: WalterUseCase = WalterQuery()
 
 
 @walter_router.get("/passengers")
@@ -18,9 +19,9 @@ async def list_titanic_passengers(
     size: int = Query(50, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await walter_use_case.execute(db, page=page, size=size)
+    result = await walter_use_case.list_passengers(db, page=page, size=size)
     logger.info(
-        "[Walter] 승객 목록 조회 — page=%d size=%d returned=%d total=%s",
+        "🎈 [Walter] 승객 목록 조회 — page=%d size=%d returned=%d total=%s",
         page,
         size,
         len(result.get("items", [])),

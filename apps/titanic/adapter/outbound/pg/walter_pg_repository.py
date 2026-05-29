@@ -59,7 +59,7 @@ class WalterPgRepository(WalterRepository):
         ]
 
         logger.info(
-            "[WalterPg] 승객 목록 조회 완료 — page=%d size=%d returned=%d total=%d",
+            "🎈 [WalterPg] 승객 목록 조회 완료 — page=%d size=%d returned=%d total=%d",
             page,
             size,
             len(passengers),
