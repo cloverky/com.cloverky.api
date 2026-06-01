@@ -6,14 +6,12 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class WalterUseCase(ABC):
+class JamesDirectorRepository(ABC):
 
     @abstractmethod
-    async def list_passengers(
+    async def receive_uploaded_records(
         self,
         db: AsyncSession,
-        *,
-        page: int,
-        size: int,
+        records: list[dict[str, Any]],
     ) -> dict[str, Any]:
-        pass
+        ...

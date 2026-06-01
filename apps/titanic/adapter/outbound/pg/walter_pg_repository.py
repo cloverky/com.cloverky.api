@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import logging
-from typing import Dict
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +21,7 @@ class WalterPgRepository(WalterRepository):
         *,
         page: int,
         size: int,
-    ) -> Dict[str, object]:
+    ) -> dict[str, Any]:
         total_result = await db.execute(
             select(func.count(func.distinct(TitanicPassengerModel.passenger_id))),
         )

@@ -39,9 +39,7 @@ from fridge.models.receipt import FridgeReceipt, FridgeReceiptLine  # noqa: F401
 from titanic.adapter.outbound.orm.titanic_passenger_model import TitanicPassengerModel  # noqa: F401
 from fridge.controllers.ingredient_router import router as inventory_router
 from fridge.controllers.receipt_router import router as receipt_router
-from titanic.adapter.inbound.api.v1.james_router import james_router
-from titanic.adapter.inbound.api.v1.walter_router import walter_router
-from titanic.adapter.inbound.api.v1.titanic_query_router import titanic_router as titanic_query_router
+from titanic.adapter.inbound.api import titanic_router
 from secom.app.schemas.user_schema import LoginSchema, UserSchema
 from secom.app.controllers.user_controller import UserController
 
@@ -299,9 +297,7 @@ app.add_middleware(
 
 app.include_router(inventory_router)
 app.include_router(receipt_router)
-app.include_router(titanic_query_router)
-app.include_router(james_router)
-app.include_router(walter_router)
+app.include_router(titanic_router)
 
 
 

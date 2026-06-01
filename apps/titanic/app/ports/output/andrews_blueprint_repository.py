@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
-class JamesUseCase(ABC):
+class AndrewsBlueprintRepository(ABC):
 
     @abstractmethod
-    async def receive_uploaded_records(self, records: list[dict[str, Any]]) -> dict[str, Any]:
+    async def get_andrews_blueprint(self) -> dict[str, Any]:
         ...

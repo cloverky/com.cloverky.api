@@ -8,19 +8,23 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from titanic.adapter.outbound.orm.titanic_passenger_model import TitanicPassengerModel
-from titanic.app.ports.output.james_repository import JamesRepository
+from titanic.app.ports.output.james_director_repository import JamesDirectorRepository
 
 logger = logging.getLogger(__name__)
 
 
-class JamesPgRepository(JamesRepository):
+class JamesDirectorPgRepository(JamesDirectorRepository):
 
-    async def save_rows(self, db: AsyncSession, rows: list[dict[str, Any]]) -> dict[str, Any]:
-        if not rows:
+    async def receive_uploaded_records(
+        self,
+        db: AsyncSession,
+        records: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        if not records:
             logger.info("🍀 [JamesPg] 저장할 row 없음")
             return {"count": 0, "rows": []}
 
-        prepared = [self._normalize_row(row) for row in rows]
+        prepared = [self._normalize_row(row) for row in records]
         logger.info("🍀 [JamesPg] Neon DB 저장 시작 — rows=%d", len(prepared))
         saved: list[dict[str, Any]] = []
 
