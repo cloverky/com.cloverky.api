@@ -3,101 +3,39 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sqlalchemy import delete
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from titanic.adapter.outbound.orm.titanic_passenger_model import TitanicPassengerModel
+
+from titanic.app.dtos.james_director_dto import BookingCommand, PersonCommand
 from titanic.app.ports.output.james_director_repository import JamesDirectorRepository
 
 logger = logging.getLogger(__name__)
 
 
 class JamesDirectorPgRepository(JamesDirectorRepository):
-
     async def receive_uploaded_records(
         self,
-        db: AsyncSession,
-        records: list[dict[str, Any]],
+        person_commands: list[PersonCommand],
+        booking_commands: list[BookingCommand],
     ) -> dict[str, Any]:
-        if not records:
-            logger.info("🍀 [JamesPg] 저장할 row 없음")
-            return {"count": 0, "rows": []}
+        logger.info(
+            "🍀 [JamesPg] 저장 시작 — person=%d, booking=%d",
+            len(person_commands),
+            len(booking_commands),
+        )
 
-        prepared = [self._normalize_row(row) for row in records]
-        logger.info("🍀 [JamesPg] Neon DB 저장 시작 — rows=%d", len(prepared))
-        saved: list[dict[str, Any]] = []
+        for index, command in enumerate(person_commands[:5], start=1):
+            logger.info("🎀🎀🎀 [제임스 레포지터리] PersonCommand 상위 5개 레코드 %d/5 — %s", index, command)
 
-        try:
-            await db.execute(delete(TitanicPassengerModel))
-            logger.info("🍀 [JamesPg] 기존 titanic_passengers 전체 삭제 완료")
+        for index, command in enumerate(booking_commands[:5], start=1):
+            logger.info("🎀🎀🎀🎀 [제임스 레포지터리] BookingCommand 상위 5개 레코드 %d/5 — %s", index, command)
 
-            for row in prepared:
-                entity = TitanicPassengerModel(
-                    passenger_id=self._to_int(row["PassengerId"]),
-                    survived=self._to_int(row["Survived"]),
-                    pclass=self._to_int(row["Pclass"]),
-                    name=str(row["Name"]).strip(),
-                    gender=str(row.get("Sex") or row.get("gender") or "").strip(),
-                    age=self._to_optional_float(row.get("Age")),
-                    sibsp=self._to_int(row["SibSp"]),
-                    parch=self._to_int(row["Parch"]),
-                    ticket=str(row["Ticket"]).strip(),
-                    fare=self._to_float(row["Fare"]),
-                    cabin=self._optional_str(row.get("Cabin")),
-                    embarked=self._optional_str(row.get("Embarked")),
-                )
-                db.add(entity)
-                await db.flush()
-                saved.append(
-                    {
-                        "id": entity.id,
-                        "passenger_id": entity.passenger_id,
-                        "name": entity.name,
-                        "gender": entity.gender,
-                    },
-                )
-
-            await db.commit()
-        except OperationalError as exc:
-            await db.rollback()
-            logger.exception("🍀 [JamesPg] Neon DB 연결 오류 — 롤백 수행")
-            raise RuntimeError("Neon DB 연결이 일시적으로 끊어졌습니다. 잠시 후 다시 시도해 주세요.") from exc
-        except Exception:
-            await db.rollback()
-            logger.exception("🍀 [JamesPg] 저장 실패 — 롤백 수행")
-            raise
-        logger.info("🍀 [JamesPg] Neon DB 저장 완료 — committed=%d", len(saved))
-        return {"count": len(saved), "rows": saved}
-
-    @staticmethod
-    def _normalize_row(row: dict[str, Any]) -> dict[str, Any]:
-        normalized = dict(row)
-        gender = normalized.pop("gender", None) or normalized.get("Sex", "")
-        if gender and "Sex" not in normalized:
-            normalized["Sex"] = str(gender).strip()
-        return normalized
-
-    @staticmethod
-    def _optional_str(value: Any) -> str | None:
-        if value is None:
-            return None
-        cleaned = str(value).strip()
-        return cleaned or None
-
-    @staticmethod
-    def _to_int(value: Any) -> int:
-        return int(str(value or "0").strip())
-
-    @staticmethod
-    def _to_float(value: Any) -> float:
-        return float(str(value or "0").strip())
-
-    @staticmethod
-    def _to_optional_float(value: Any) -> float | None:
-        if value is None:
-            return None
-        cleaned = str(value).strip()
-        if not cleaned:
-            return None
-        return float(cleaned)
+        rows = [
+            {
+                "id": None,
+                "passenger_id": int(command.passenger_id) if command.passenger_id else None,
+                "name": command.name or None,
+                "gender": command.gender or None,
+            }
+            for command in person_commands
+        ]
+        return {"count": len(person_commands), "rows": rows}

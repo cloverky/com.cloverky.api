@@ -5,17 +5,13 @@ import io
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from database import get_db
 from titanic.adapter.inbound.api.schemas.james_director_schemas import (
     JAMES_DIRECTOR_CSV_COLUMNS,
-    JamesDirectorPassengerSchema,
     JamesDirectorUploadResponseSchema,
+    TitanicRecordSchema,
 )
-from titanic.adapter.outbound.pg.james_director_pg_repository import JamesDirectorPgRepository
 from titanic.app.ports.input.james_director_use_case import JamesDirectorUseCase
 from titanic.app.use_cases.james_director_interactor import JamesDirectorInteractor
 
@@ -24,12 +20,8 @@ logger = logging.getLogger(__name__)
 james_director_router = APIRouter(prefix="/titanic/james", tags=["james"])
 
 
-def _james_use_case(db: AsyncSession) -> JamesDirectorUseCase:
-    return JamesDirectorInteractor(repository=JamesDirectorPgRepository(), db=db)
-
-
-def _load_passenger_schemas(text: str) -> tuple[list[JamesDirectorPassengerSchema], list[str]]:
-    """CSV 텍스트를 JamesDirectorPassengerSchema 목록으로 옮겨 담는다."""
+def _load_titanic_records(text: str) -> tuple[list[TitanicRecordSchema], list[str]]:
+    """CSV 텍스트를 TitanicRecordSchema 목록으로 옮겨 담는다."""
     reader = csv.DictReader(io.StringIO(text))
     if not reader.fieldnames:
         raise HTTPException(status_code=400, detail="CSV 헤더를 찾을 수 없습니다.")
@@ -45,23 +37,26 @@ def _load_passenger_schemas(text: str) -> tuple[list[JamesDirectorPassengerSchem
             detail=f"필수 컬럼이 누락되었습니다: {', '.join(missing)}",
         )
 
-    passengers: list[JamesDirectorPassengerSchema] = []
+    records: list[TitanicRecordSchema] = []
     for line_no, row in enumerate(reader, start=2):
         try:
-            passengers.append(JamesDirectorPassengerSchema.model_validate(row))
+            records.append(TitanicRecordSchema.model_validate(row))
         except ValidationError as exc:
             raise HTTPException(
                 status_code=400,
                 detail=f"CSV {line_no}행 데이터 형식이 올바르지 않습니다: {exc.errors()[0]['msg']}",
             ) from exc
 
-    return passengers, list(reader.fieldnames)
+    return records, list(reader.fieldnames)
+
+
+def _to_repository_rows(records: list[TitanicRecordSchema]) -> list[dict[str, Any]]:
+    return [record.model_dump() for record in records]
 
 
 @james_director_router.post("/upload", response_model=JamesDirectorUploadResponseSchema)
 async def upload_titanic_csv(
     file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
 ) -> JamesDirectorUploadResponseSchema:
     if not file.filename or not file.filename.lower().endswith(".csv"):
         logger.warning("🍀 [James] CSV 업로드 거부 — csv가 아닌 파일: %r", file.filename)
@@ -76,20 +71,22 @@ async def upload_titanic_csv(
     except UnicodeDecodeError as exc:
         raise HTTPException(status_code=400, detail="UTF-8 CSV 파일만 지원합니다.") from exc
 
-    passengers, fieldnames = _load_passenger_schemas(text)
-    records: list[dict[str, Any]] = [passenger.model_dump() for passenger in passengers]
+    titanic_records, fieldnames = _load_titanic_records(text)
+
     # 레코드 목록 상위 5줄만 출력 (실제 서비스에서는 제거)
-    for index, record in enumerate(records[:5], start=1):
-        print(f"🍀 [James] record 미리보기 {index}/5 — {record}")
+    for index, record in enumerate(titanic_records[:5], start=1):
+        print(f"🎀 [제임스 라우터] 업로드된 csv 파일에서 스키마로 옮겨진 상위 5개 레코드 {index}/5 — {record.model_dump()}")
+    rows = _to_repository_rows(titanic_records)
+    use_case : JamesDirectorUseCase = JamesDirectorInteractor()
 
     logger.info(
-        "🍀 [James] CSV 파싱 완료 — passengers=%d, columns=%s",
-        len(passengers),
+        "🍀 [James] CSV 파싱 완료 — rows=%d, columns=%s",
+        len(titanic_records),
         fieldnames,
     )
 
     try:
-        result = await _james_use_case(db).receive_uploaded_records(records)
+        result = await use_case.receive_uploaded_records(rows)
     except RuntimeError as exc:
         logger.exception("🍀 [James] 업로드 처리 실패 — 서비스 일시 장애")
         raise HTTPException(status_code=503, detail=str(exc)) from exc

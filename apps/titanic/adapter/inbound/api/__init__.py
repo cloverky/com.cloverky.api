@@ -11,7 +11,7 @@ from titanic.adapter.inbound.api.v1.ruth_corset_router import ruth_corset_router
 from titanic.adapter.inbound.api.v1.titanic_query_router import titanic_router as titanic_query_router
 from titanic.adapter.inbound.api.v1.walter_router import walter_router
 
-titanic_router = APIRouter()
+titanic_router = APIRouter(tags=["titanic"])
 
 titanic_router.include_router(titanic_query_router)
 titanic_router.include_router(james_director_router)
