@@ -75,7 +75,11 @@ async def upload_titanic_csv(
 
     # 레코드 목록 상위 5줄만 출력 (실제 서비스에서는 제거)
     for index, record in enumerate(titanic_records[:5], start=1):
-        print(f"🎀 [제임스 라우터] 업로드된 csv 파일에서 스키마로 옮겨진 상위 5개 레코드 {index}/5 — {record.model_dump()}")
+        logger.info(
+            "🎀 [제임스 라우터] 업로드된 csv 파일에서 스키마로 옮겨진 상위 5개 레코드 %d/5 — %s",
+            index,
+            record.model_dump(),
+        )
     rows = _to_repository_rows(titanic_records)
     use_case : JamesDirectorUseCase = JamesDirectorInteractor()
 
