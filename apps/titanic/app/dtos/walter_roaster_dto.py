@@ -1,5 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any
+
 
 @dataclass
 class WalterRoasterQuery:
-    pass
+    id: int = 1
+    name: str 
+    memo: str 
+
