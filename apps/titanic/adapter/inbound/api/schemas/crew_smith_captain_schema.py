@@ -1,5 +1,10 @@
 from pydantic import BaseModel, Field
 
+
+
+class ChatSchema(BaseModel):
+    message: str = Field(..., description="사용자가 입력한 자연어 메시지")
+
 class SmithCaptainSchema(BaseModel):
     
     id: int = Field(0, description="Captain ID")
@@ -14,3 +19,4 @@ class SmithCaptainSchema(BaseModel):
             }
         }
     }
+

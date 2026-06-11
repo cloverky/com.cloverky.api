@@ -3,10 +3,10 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.matrix.oracle_database import get_db
-from titanic.adapter.inbound.api.schemas.crew_smith_captain_schema import SmithCaptainSchema
-from clover.apps.titanic.app.dtos.crew_smith_captain_dto import SmithCaptainResponse
-from clover.apps.titanic.app.ports.input.crew_smith_captain_use_case import SmithCaptainUseCase
-from clover.apps.titanic.dependencies.crew_smith_captain_provider import get_smith_captain_use_case
+from titanic.adapter.inbound.api.schemas.crew_smith_captain_schema import ChatSchema, SmithCaptainSchema
+from titanic.app.dtos.crew_smith_captain_dto import SmithCaptainResponse
+from titanic.app.ports.input.crew_smith_captain_use_case import SmithCaptainUseCase
+from titanic.dependencies.crew_smith_captain_provider import get_smith_captain_use_case
 
 '''
 스미스 선장 (Captain Edward John Smith)
@@ -21,9 +21,10 @@ smith_captain_router = APIRouter(prefix="/smith", tags=["smith"])
 
 @smith_captain_router.post("/chat")
 async def chat(
+    schema: Annotated[ChatSchema, Body()],
     smith: SmithCaptainUseCase = Depends(get_smith_captain_use_case)
-) -> SmithCaptainResponse :
-    return None
+) -> SmithCaptainResponse:
+    return await smith.chat(schema)
     
 
 
@@ -34,7 +35,7 @@ async def introduce_myself(
 ) -> SmithCaptainResponse :
     return await smith.introduce_myself(
         SmithCaptainSchema(
-            id=7,
+            id=6,
             name="스미스 선장 (Captain Edward John Smith)"
         )
     )
