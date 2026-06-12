@@ -3,11 +3,15 @@ Value Objects — 불변(immutable), 동등성은 값으로 판단, 자체 유�
 """
 from __future__ import annotations
 from dataclasses import dataclass
+from enum import Enum
 
 
-# ──────────────────────────────────────────────
-# PassengerId VO
-# ──────────────────────────────────────────────
+class GenderType(str, Enum):
+    MALE = "male"
+    FEMALE = "female"
+    UNKNOWN = "unknown"
+
+
 @dataclass(frozen=True)
 class PassengerId:
     value: str
@@ -20,9 +24,6 @@ class PassengerId:
         return self.value
 
 
-# ──────────────────────────────────────────────
-# PassengerName VO
-# ──────────────────────────────────────────────
 @dataclass(frozen=True)
 class PassengerName:
     value: str
@@ -31,79 +32,90 @@ class PassengerName:
         stripped = self.value.strip() if self.value else ""
         if not stripped:
             raise ValueError("이름은 빈 값일 수 없습니다.")
-        if len(stripped) > 100:
-            raise ValueError("이름은 100자를 초과할 수 없습니다.")
-        # frozen=True라 object.__setattr__ 우회
+        if len(stripped) > 200:
+            raise ValueError("이름은 200자를 초과할 수 없습니다.")
         object.__setattr__(self, "value", stripped)
 
+    @property
+    def full_name(self) -> str:
+        return self.value
+
+    @property
+    def normalized(self) -> str:
+        return self.value
+
     def __str__(self) -> str:
         return self.value
 
 
-# ──────────────────────────────────────────────
-# Gender VO
-# ──────────────────────────────────────────────
 @dataclass(frozen=True)
 class Gender:
-    MALE = "male"
-    FEMALE = "female"
+    value: GenderType
 
-    value: str
+    @classmethod
+    def from_raw(cls, raw: str | None) -> Gender:
+        if raw is None:
+            return cls(value=GenderType.UNKNOWN)
+        normalized = raw.strip().lower()
+        if normalized == "male":
+            return cls(value=GenderType.MALE)
+        if normalized == "female":
+            return cls(value=GenderType.FEMALE)
+        return cls(value=GenderType.UNKNOWN)
 
-    def __post_init__(self) -> None:
-        normalized = self.value.strip().lower() if self.value else ""
-        allowed = {self.MALE, self.FEMALE}
-        if normalized not in allowed:
-            raise ValueError(f"성별은 {allowed} 중 하나여야 합니다. 입력값: {self.value!r}")
-        object.__setattr__(self, "value", normalized)
-
-    @property
-    def is_male(self) -> bool:
-        return self.value == self.MALE
-
-    @property
     def is_female(self) -> bool:
-        return self.value == self.FEMALE
+        return self.value == GenderType.FEMALE
+
+    def is_male(self) -> bool:
+        return self.value == GenderType.MALE
 
     def __str__(self) -> str:
-        return self.value
+        return self.value.value
 
 
-# ──────────────────────────────────────────────
-# Age VO
-# ──────────────────────────────────────────────
 @dataclass(frozen=True)
 class Age:
-    value: float
+    value: float | None
 
     def __post_init__(self) -> None:
+        if self.value is None:
+            return
         if self.value < 0:
             raise ValueError("나이는 0 이상이어야 합니다.")
-        if self.value > 150:
-            raise ValueError("나이는 150을 초과할 수 없습니다.")
+        if self.value > 120:
+            raise ValueError("나이는 120을 초과할 수 없습니다.")
+
+    @classmethod
+    def from_raw(cls, raw: str | None) -> Age:
+        if raw is None or (isinstance(raw, str) and raw.strip() == ""):
+            return cls(value=None)
+        try:
+            return cls(value=float(str(raw).strip()))
+        except (ValueError, AttributeError):
+            raise ValueError(f"파싱 실패: {raw!r}")
 
     @property
-    def is_child(self) -> bool:
+    def is_unknown(self) -> bool:
+        return self.value is None
+
+    @property
+    def is_minor(self) -> bool:
+        if self.value is None:
+            return False
         return self.value < 18
 
     @property
     def is_adult(self) -> bool:
+        if self.value is None:
+            return False
         return self.value >= 18
 
     def __str__(self) -> str:
-        return str(self.value)
+        return str(self.value) if self.value is not None else "unknown"
 
 
-# ──────────────────────────────────────────────
-# FamilyInfo VO  (SibSp + Parch를 하나의 VO로 묶음)
-# 도메인 개념: 동반 가족 정보
-# ──────────────────────────────────────────────
 @dataclass(frozen=True)
-class FamilyInfo:
-    """
-    sib_sp: 탑승한 형제/배우자 수
-    parch : 탑승한 부모/자녀 수
-    """
+class FamilyRelation:
     sib_sp: int
     parch: int
 
@@ -113,52 +125,46 @@ class FamilyInfo:
         if self.parch < 0:
             raise ValueError("parch는 0 이상이어야 합니다.")
 
+    @classmethod
+    def from_raw(cls, sib_sp: str | None, parch: str | None) -> FamilyRelation:
+        return cls(
+            sib_sp=int(sib_sp) if sib_sp else 0,
+            parch=int(parch) if parch else 0,
+        )
+
     @property
-    def total_family_members(self) -> int:
+    def total_family_size(self) -> int:
         return self.sib_sp + self.parch
 
     @property
     def is_alone(self) -> bool:
-        return self.total_family_members == 0
+        return self.total_family_size == 0
 
 
-# ──────────────────────────────────────────────
-# SurvivalStatus VO
-# ──────────────────────────────────────────────
+FamilyInfo = FamilyRelation
+
+
 @dataclass(frozen=True)
 class SurvivalStatus:
-    SURVIVED = "survived"
-    NOT_SURVIVED = "not_survived"
-    UNKNOWN = "unknown"
-
-    value: str
-
-    def __post_init__(self) -> None:
-        allowed = {self.SURVIVED, self.NOT_SURVIVED, self.UNKNOWN}
-        if self.value not in allowed:
-            raise ValueError(f"생존 상태는 {allowed} 중 하나여야 합니다.")
+    survived: bool | None = None
 
     @classmethod
     def from_raw(cls, raw: str | None) -> SurvivalStatus:
-        """ORM의 raw 문자열 → VO 변환 팩토리"""
-        if raw is None:
-            return cls(cls.UNKNOWN)
-        mapping = {
-            "1": cls.SURVIVED,
-            "true": cls.SURVIVED,
-            "yes": cls.SURVIVED,
-            "0": cls.NOT_SURVIVED,
-            "false": cls.NOT_SURVIVED,
-            "no": cls.NOT_SURVIVED,
+        if raw is None or (isinstance(raw, str) and raw.strip() == ""):
+            return cls(survived=None)
+        mapping: dict[str, bool] = {
+            "1": True, "true": True, "yes": True,
+            "0": False, "false": False, "no": False,
         }
         normalized = raw.strip().lower()
         if normalized not in mapping:
-            raise ValueError(f"생존 상태로 변환할 수 없는 값: {raw!r}")
-        return cls(mapping[normalized])
+            raise ValueError(f"파싱 실패: {raw!r}")
+        return cls(survived=mapping[normalized])
+
+    @property
+    def is_unknown(self) -> bool:
+        return self.survived is None
 
     @property
     def is_survived(self) -> bool:
-        return self.value == self.SURVIVED
-
-    def __str__(self) -> str:
-        return self.value
+        return self.survived is True

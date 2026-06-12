@@ -15,10 +15,9 @@ class Keymaker:
     def is_gemini_ready(self) -> bool:
         return bool(os.getenv("GEMINI_API_KEY", "").strip())
 
-    def get_gemini_model(self):
-        import google.generativeai as genai
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY", ""))
-        return genai.GenerativeModel("gemini-1.5-flash")
+    def get_gemini_client(self):
+        from google import genai
+        return genai.Client(api_key=os.getenv("GEMINI_API_KEY", ""))
 
     def is_openweather_ready(self) -> bool:
         return bool(os.getenv("OPENWEATHER_API_KEY", "").strip())

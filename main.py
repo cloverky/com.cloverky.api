@@ -257,42 +257,25 @@ def chat(req: ChatRequest) -> ChatResponse:
     """
     JSON 본문 `{"message": "..."}` 를 받아 Gemini 답변 문자열을 반환합니다.
     """
+    logger.info("채팅 수신: %r", req.message)
     if not keymaker.is_gemini_ready():
         raise HTTPException(
             status_code=503,
             detail="GEMINI_API_KEY가 설정되지 않았습니다. backend/.env 에 키를 넣어 주세요.",
         )
 
-    model = keymaker.get_gemini_model()
+    client = keymaker.get_gemini_client()
     try:
-        response = model.generate_content(req.message)
-    except Exception as e:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Gemini 호출 실패: {e!s}",
-        ) from e
-
-    try:
-        text = (response.text or "").strip()
-    except ValueError as e:
-        feedback = getattr(response, "prompt_feedback", None)
-        raise HTTPException(
-            status_code=400,
-            detail=f"응답 텍스트를 읽을 수 없습니다: {e!s}. prompt_feedback={feedback}",
-        ) from e
-
-    if not text:
-        reason = None
-        if getattr(response, "candidates", None):
-            c0 = response.candidates[0]
-            reason = getattr(c0, "finish_reason", None)
-        raise HTTPException(
-            status_code=502,
-            detail=(
-                "모델이 비어 있는 응답을 반환했습니다."
-                + (f" (finish_reason={reason})" if reason else "")
-            ),
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=req.message,
         )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Gemini 호출 실패: {e!s}") from e
+
+    text = (response.text or "").strip()
+    if not text:
+        raise HTTPException(status_code=502, detail="모델이 비어 있는 응답을 반환했습니다.")
 
     return ChatResponse(reply=text)
 

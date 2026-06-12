@@ -1,15 +1,15 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-import logging
-
-logger = logging.getLogger(__name__)
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from clover.apps.titanic.app.dtos.crew_smith_captain_dto import SmithCaptainQuery, SmithCaptainResponse
+from titanic.app.dtos.crew_smith_captain_dto import SmithCaptainQuery, SmithCaptainResponse, SmithChatResponse
 from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import PersonOrm
+
+logger = logging.getLogger(__name__)
 
 
 class SmithCaptainPgRepository:
@@ -17,19 +17,23 @@ class SmithCaptainPgRepository:
         self.session = session
 
     async def introduce_myself(self, query: SmithCaptainQuery) -> SmithCaptainResponse:
-        
-        '''앤드류 설계자의 자기 소개 레포지토리 구현 메소드'''
-
-        logger.info(f"[SmithCaptainPgRepository] introduce_myself 진입 | request_data={query}")
-        
-        response: SmithCaptainResponse = SmithCaptainResponse(
-            id= query.id * 10000,
-            name= query.name + "가 레포지토리에 다녀옴"
+        logger.info("[SmithCaptainPgRepository] introduce_myself 진입 | request_data=%s", query)
+        return SmithCaptainResponse(
+            id=query.id * 10000,
+            name=query.name + "가 레포지토리에 다녀옴"
         )
-        return response
+
+    async def chat(self, message: str) -> SmithChatResponse:
+        logger.info("[SmithCaptainPgRepository] chat 진입 | message=%r", message)
+        from core.matrix.keymaker_api import get_keymaker
+        keymaker = get_keymaker()
+        if not keymaker.is_gemini_ready():
+            raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다. clover/.env 에 키를 넣어 주세요.")
+        client = keymaker.get_gemini_client()
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=message)
+        return SmithChatResponse(reply=(response.text or "").strip())
 
     async def get_stats(self) -> dict[str, Any]:
-        """전체 승객 생존/사망 통계 조회"""
         total = (
             await self.session.execute(select(func.count()).select_from(PersonOrm))
         ).scalar_one()

@@ -2,6 +2,7 @@
 
 > 루트 원칙: [`../../../../CLAUDE.md`](../../../../CLAUDE.md)
 > 백엔드 공통: [`../../CLAUDE.md`](../../CLAUDE.md) (clover)
+> 엔티티·테이블 규칙: [[ENTITY_RULE]]
 
 ---
 

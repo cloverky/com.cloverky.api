@@ -91,3 +91,20 @@ class JamesDirectorUploadResponseSchema(BaseModel):
     count: int
     columns: list[str]
     rows: list[JamesDirectorSchema]
+
+
+class FileUploadSchema(BaseModel):
+    """CSV 업로드 단일 행 — 모든 필드는 문자열(None 허용)."""
+
+    passenger_id: str | None = None
+    survived: str | None = None
+    pclass: str | None = None
+    name: str | None = None
+    gender: str | None = None
+    age: str | None = None
+    sib_sp: str | None = None
+    parch: str | None = None
+    ticket: str | None = None
+    fare: str | None = None
+    cabin: str | None = None
+    embarked: str | None = None

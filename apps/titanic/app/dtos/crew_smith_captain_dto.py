@@ -10,3 +10,7 @@ class SmithCaptainQuery:
 class SmithCaptainResponse:
     id: int
     name: str
+
+@dataclass(frozen=True)
+class SmithChatResponse:
+    reply: str

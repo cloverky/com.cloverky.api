@@ -1,9 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from clover.apps.titanic.app.ports.input.passenger_jack_trainer_use_case import JackTrainerUseCase
-from clover.apps.titanic.app.ports.input.passenger_rose_model_use_case import RoseModelUseCase
 from titanic.adapter.inbound.api.schemas.crew_smith_captain_schema import SmithCaptainSchema, ChatSchema
-from clover.apps.titanic.app.dtos.crew_smith_captain_dto import SmithCaptainResponse
+from titanic.app.dtos.crew_smith_captain_dto import SmithCaptainResponse, SmithChatResponse
 
 class SmithCaptainUseCase(ABC):
 
@@ -13,9 +11,6 @@ class SmithCaptainUseCase(ABC):
         pass
 
     @abstractmethod
-    async def chat(self, schema: ChatSchema, 
-                   jack: JackTrainerUseCase,
-                   rose: RoseModelUseCase
-                   ) -> SmithCaptainResponse:
+    async def chat(self, schema: ChatSchema) -> SmithChatResponse:
         '''사용자 자연어 입력을 받아 채팅 응답을 반환'''
         pass

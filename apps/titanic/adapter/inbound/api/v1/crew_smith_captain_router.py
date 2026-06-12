@@ -1,13 +1,13 @@
+import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Body, Depends, HTTPException
 
-from core.matrix.oracle_database import get_db
 from titanic.adapter.inbound.api.schemas.crew_smith_captain_schema import ChatSchema, SmithCaptainSchema
 from titanic.app.ports.input.crew_smith_captain_use_case import SmithCaptainUseCase
 from titanic.dependencies.crew_smith_captain_provider import get_smith_captain_use_case
+
+logger = logging.getLogger(__name__)
 
 '''
 스미스 선장 (Captain Edward John Smith)
@@ -25,7 +25,11 @@ async def chat(
     schema: Annotated[ChatSchema, Body()],
     smith: SmithCaptainUseCase = Depends(get_smith_captain_use_case)
 ):
-    return await smith.chat(schema)
+    logger.info("스미스 채팅 수신 — message: %r", schema.message)
+    try:
+        return await smith.chat(schema)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
     
 
 
