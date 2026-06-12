@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 
-titanic_router = APIRouter(prefix="/titanic", tags=["titanic"])
+titanic_router = APIRouter(prefix="/api/titanic", tags=["titanic"])
 
 _routers = [
     ("titanic.adapter.inbound.api.v1.crew_james_director_router", "james_director_router"),

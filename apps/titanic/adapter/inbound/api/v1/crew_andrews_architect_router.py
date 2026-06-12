@@ -10,7 +10,7 @@ from clover.apps.titanic.dependencies.crew_andrews_architect_provider import get
 
 추천 파일명: andrews_architect_router.py (Architect: 타이타닉 설계자)
 '''
-andrews_architect_router = APIRouter(prefix="/titanic/andrews", tags=["andrews"])
+andrews_architect_router = APIRouter(prefix="/andrews", tags=["andrews"])
 
 @andrews_architect_router.get("/myself")
 async def introduce_myself(

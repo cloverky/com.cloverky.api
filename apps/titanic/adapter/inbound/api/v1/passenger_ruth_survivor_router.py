@@ -12,7 +12,7 @@ from clover.apps.titanic.dependencies.passenger_ruth_survivor_provider import ge
 추천 파일명: ruth_validation_router.py
 '''
 
-ruth_validation_router = APIRouter(prefix="/titanic/ruth", tags=["ruth"])
+ruth_validation_router = APIRouter(prefix="/ruth", tags=["ruth"])
 
 
 @ruth_validation_router.get("/myself")

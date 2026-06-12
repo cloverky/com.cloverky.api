@@ -14,7 +14,7 @@ from clover.apps.titanic.dependencies.crew_james_director import get_james_direc
  완벽주의 성향으로 타이타닉의 모든 세트와 디테일을
  고증한 아키텍처의 총괄 디렉터 역할 수행
 '''
-james_director_router = APIRouter(prefix="/titanic/james", tags=["james"])
+james_director_router = APIRouter(prefix="/james", tags=["james"])
 
 @james_director_router.get("/myself")
 async def introduce_myself(

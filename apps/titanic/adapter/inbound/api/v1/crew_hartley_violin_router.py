@@ -10,7 +10,7 @@ from clover.apps.titanic.dependencies.crew_hartley_violin_provider import get_ha
 
 추천 파일명: hartley_violin_router.py (Violin: 마지막까지 켜던 바이올린)
 '''
-hartley_violin_router = APIRouter(prefix="/titanic/hartley", tags=["hartley"])
+hartley_violin_router = APIRouter(prefix="/hartley", tags=["hartley"])
 
 @hartley_violin_router.get("/myself")
 async def introduce_myself(

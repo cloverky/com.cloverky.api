@@ -11,7 +11,7 @@ from clover.apps.titanic.dependencies.crew_lowe_boat_provider import get_lowe_bo
 해롤드 로우 (Harold Lowe - 타이타닉 5등 항해사)
 구명보트(14호)를 이끌고 유일하게 지원자를 구하러 되돌아옴
 '''
-lowe_boat_router = APIRouter(prefix="/titanic/lowe", tags=["lowe"])
+lowe_boat_router = APIRouter(prefix="/lowe", tags=["lowe"])
 
 @lowe_boat_router.get("/myself")
 async def introduce_myself(

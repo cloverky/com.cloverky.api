@@ -13,7 +13,7 @@ from titanic.dependencies.crew_walter_roaster import get_walter_roaster_use_case
 직관적이면서도 센스 있는 중간 키워드를 추천해 드립니다.
 '''
 logger = logging.getLogger(__name__)
-walter_roaster_router = APIRouter(prefix="/titanic/walter", tags=["walter"])    
+walter_roaster_router = APIRouter(prefix="/walter", tags=["walter"])    
 
 @walter_roaster_router.get("/myself")
 async def introduce_myself(

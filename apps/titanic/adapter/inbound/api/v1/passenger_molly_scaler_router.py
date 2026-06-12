@@ -17,7 +17,7 @@ from clover.apps.titanic.dependencies.passenger_molly_scaler_provider import get
 이후 구조선 카르파티아호에서도 생존자들을 헌신적으로 돌보며 역사에 남을 영웅적인 면모를 보여줍니다.
 '''
 
-molly_scaler_router = APIRouter(prefix="/titanic/molly", tags=["molly"])
+molly_scaler_router = APIRouter(prefix="/molly", tags=["molly"])
 
 
 @molly_scaler_router.get("/myself")

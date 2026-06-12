@@ -11,7 +11,7 @@ from clover.apps.titanic.dependencies.passenger_isidor_couple_provider import ge
 
 추천 파일명: isidor_couple_router.py (Couple: 마지막을 함께한 부부)
 '''
-isidor_couple_router = APIRouter(prefix="/titanic/isidor", tags=["isidor"])
+isidor_couple_router = APIRouter(prefix="/isidor", tags=["isidor"])
 
 @isidor_couple_router.get("/myself")
 async def introduce_myself(

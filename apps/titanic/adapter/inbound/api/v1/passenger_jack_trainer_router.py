@@ -11,7 +11,7 @@ from clover.apps.titanic.dependencies.passenger_jack_trainer_provider import get
 생존 예측 모델의 핵심 인터페이스를 담당합니다.
 '''
 
-jack_trainer_router = APIRouter(prefix="/titanic/jack", tags=["jack"])
+jack_trainer_router = APIRouter(prefix="/jack", tags=["jack"])
 
 
 @jack_trainer_router.get("/myself")
