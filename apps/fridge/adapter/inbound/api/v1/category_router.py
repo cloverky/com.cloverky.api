@@ -1,32 +1,27 @@
 from fastapi import APIRouter, Depends
 
-from fridge.adapter.inbound.api.schemas.food_catalog_schemas import (
-    CategoryCreateRequest,
-    CategoryResponse,
-)
-from fridge.app.dtos.food_catalog_dto import CreateCategoryCommand
-from fridge.app.ports.input.category_catalog_use_case import CategoryCatalogUseCase
-from fridge.dependencies.category_catalog import get_category_catalog_use_case
+from fridge.adapter.inbound.api.schemas.category_schema import CategorySchema
+from clover.apps.fridge.app.dtos.category_dto import CategoryResponse
+from clover.apps.fridge.app.ports.input.category_use_case import CategoryUseCase
+from clover.apps.fridge.dependencies.category_provider import get_category_use_case
 
-category_router = APIRouter(prefix="/categories", tags=["categories"])
+'''
+카테고리 (Category)
+식재료를 채소·과일·육류·유제품 등으로 분류하는 마스터 데이터.
+sort_order로 정렬 우선순위를 관리하며, 식재료 카탈로그(Food)와
+인벤토리 조회 필터링의 기준 역할을 담당한다.
+'''
 
-
-@category_router.get("", response_model=list[CategoryResponse])
-async def list_categories(
-    catalog: CategoryCatalogUseCase = Depends(get_category_catalog_use_case),
-) -> list[CategoryResponse]:
-    return [
-        CategoryResponse(id=c.id, name=c.name, sort_order=c.sort_order)
-        for c in await catalog.list_categories()
-    ]
+category_router = APIRouter(prefix="/category", tags=["category"])
 
 
-@category_router.post("", response_model=CategoryResponse, status_code=201)
-async def create_category(
-    body: CategoryCreateRequest,
-    catalog: CategoryCatalogUseCase = Depends(get_category_catalog_use_case),
+@category_router.get("/list")
+async def get_list(
+    category: CategoryUseCase = Depends(get_category_use_case)
 ) -> CategoryResponse:
-    category = await catalog.create_category(
-        CreateCategoryCommand(name=body.name, sort_order=body.sort_order),
+    return await category.get_list(
+        CategorySchema(
+            name="채소",
+            sort_order=1,
+        )
     )
-    return CategoryResponse(id=category.id, name=category.name, sort_order=category.sort_order)

@@ -1,18 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
-
-@dataclass
-class UserDto:
-    id: int
-    email: str
-    default_storage: str
+from clover.apps.fridge.app.dtos.user_dto import UserQuery, UserResponse
 
 
 class UserRepository(ABC):
 
     @abstractmethod
-    async def get_by_email(self, email: str) -> UserDto:
+    async def get_me(self, query: UserQuery) -> UserResponse:
         pass

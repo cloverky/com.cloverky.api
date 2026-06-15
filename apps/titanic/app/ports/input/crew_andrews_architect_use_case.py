@@ -12,4 +12,4 @@ class AndrewsArchitectUseCase(ABC):
     @abstractmethod
     async def introduce_myself(self, schema: AndrewsArchitectSchema) -> AndrewsArchitectResponse:
         '''앤드류 아키텍트의 자기소개 메소드'''
-        passa
+        pass

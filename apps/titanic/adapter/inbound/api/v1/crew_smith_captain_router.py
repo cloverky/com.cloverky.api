@@ -3,9 +3,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
+from titanic.dependencies.crew_smith_captain_provider import SmithCaptainUseCase
+from titanic.dependencies.passenger_rose_model_provider import RoseModelUseCase
+from titanic.dependencies.passenger_jack_trainer_provider import JackTrainerUseCase
 from titanic.adapter.inbound.api.schemas.crew_smith_captain_schema import ChatSchema, SmithCaptainSchema
 from titanic.app.ports.input.crew_smith_captain_use_case import SmithCaptainUseCase
 from titanic.dependencies.crew_smith_captain_provider import get_smith_captain_use_case
+from titanic.dependencies.passenger_jack_trainer_provider import get_jack_trainer_use_case
+from titanic.dependencies.passenger_rose_model_provider import get_rose_model_use_case
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +28,13 @@ smith_captain_router = APIRouter(prefix="/smith", tags=["smith"])
 @smith_captain_router.post("/chat")
 async def chat(
     schema: Annotated[ChatSchema, Body()],
-    smith: SmithCaptainUseCase = Depends(get_smith_captain_use_case)
+    smith: SmithCaptainUseCase = Depends(get_smith_captain_use_case),
+    jack: JackTrainerUseCase = Depends(get_jack_trainer_use_case),
+    rose: RoseModelUseCase = Depends(get_rose_model_use_case)
 ):
     logger.info("스미스 채팅 수신 — message: %r", schema.message)
     try:
-        return await smith.chat(schema)
+        return await smith.chat(schema, jack, rose)
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
     

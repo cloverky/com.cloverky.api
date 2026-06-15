@@ -2,23 +2,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from fridge.app.dtos.food_catalog_dto import CategoryDto, CreateCategoryCommand
+from clover.apps.fridge.app.dtos.category_dto import CategoryQuery, CategoryResponse
 
 
 class CategoryRepository(ABC):
 
     @abstractmethod
-    async def get_or_create_default(self, name: str, sort_order: int = 999) -> int:
-        pass
-
-    @abstractmethod
-    async def list_all(self) -> list[CategoryDto]:
-        pass
-
-    @abstractmethod
-    async def create_category(self, command: CreateCategoryCommand) -> CategoryDto:
-        pass
-
-    @abstractmethod
-    async def commit(self) -> None:
+    async def get_list(self, query: CategoryQuery) -> CategoryResponse:
         pass

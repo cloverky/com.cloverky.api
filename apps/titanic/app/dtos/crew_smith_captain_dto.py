@@ -14,3 +14,5 @@ class SmithCaptainResponse:
 @dataclass(frozen=True)
 class SmithChatResponse:
     reply: str
+
+ChatResponse = SmithChatResponse

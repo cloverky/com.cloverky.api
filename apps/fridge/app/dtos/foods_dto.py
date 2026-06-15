@@ -2,12 +2,12 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class ReceiptQuery:
-    user_id: int
-    status: str
+class FoodsQuery:
+    category_id: int
+    name: str
 
 
 @dataclass(frozen=True)
-class ReceiptUploadResponse:
+class FoodCatalogResponse:
     id: int
-    status: str
+    name: str
