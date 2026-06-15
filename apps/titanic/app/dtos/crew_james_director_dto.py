@@ -34,4 +34,5 @@ class JamesDirectorQuery:
 
 @dataclass
 class JamesDirectorResponse:
-    answer: str
+    id: int
+    name: str

@@ -6,8 +6,12 @@ from clover.core.matrix.grid_oracle_database_manager import get_db
 from titanic.app.ports.input.crew_smith_captain_use_case import SmithCaptainUseCase
 from titanic.app.use_cases.crew_smith_captain_interactor import SmithCaptainInteractor
 
-def get_smith_captain_use_case(
+def get_smith_captain_repository(
         db: AsyncSession = Depends(get_db)
+) -> SmithCaptainPgRepository:
+        return SmithCaptainPgRepository(session=db)
+
+def get_smith_captain_use_case(
+        repository: SmithCaptainRepository = Depends(get_smith_captain_repository)
 ) -> SmithCaptainUseCase:
-    repository: SmithCaptainRepository = SmithCaptainPgRepository(session=db)
-    return SmithCaptainInteractor(repository=repository)
+        return SmithCaptainInteractor(repository=repository)
