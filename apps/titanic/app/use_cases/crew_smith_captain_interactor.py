@@ -20,15 +20,16 @@ class SmithCaptainInteractor(SmithCaptainUseCase):
 
     def __init__(self, repository: SmithCaptainRepository):
         self.repository = repository
+        self.jack: JackTrainerUseCase = Depends(get_jack_trainer_use_case),
+        self.rose: RoseModelUseCase = Depends(get_rose_model_use_case)
 
-    async def chat(self, schema: ChatSchema,
-                   jack: JackTrainerUseCase = Depends(get_jack_trainer_use_case),
-                   rose: RoseModelUseCase = Depends(get_rose_model_use_case)
-                   ) -> ChatResponse:
+    async def chat(self, schema: ChatSchema) -> ChatResponse:
         logger.info(f"[SmithCaptainInteractor] chat | message={schema.message}")
+
         return ChatResponse(reply="1309명 입니다")
 
     async def introduce_myself(self, schema: SmithCaptainSchema) -> SmithCaptainResponse:
+        
         return await self.repository.introduce_myself(SmithCaptainQuery(
             id=schema.id,
             name=schema.name

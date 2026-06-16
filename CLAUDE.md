@@ -1,7 +1,6 @@
 # clover — 백엔드 CLAUDE.md
 
-> 루트 원칙: [`../CLAUDE.md`](../CLAUDE.md) 를 먼저 읽는다.
-> 앱별 상세: [`apps/titanic/_docs/CLAUDE.md`](./apps/titanic/_docs/CLAUDE.md) 등 각 앱 `_docs/` 참조.
+> 루트 원칙: `../CLAUDE.md` 를 먼저 읽는다.
 
 ---
 

@@ -1,7 +1,6 @@
 # titanic — 앱 CLAUDE.md
 
 > 루트 원칙: [`../../../../CLAUDE.md`](../../../../CLAUDE.md)
-> 백엔드 공통: [`../../CLAUDE.md`](../../CLAUDE.md) (clover)
 > 엔티티·테이블 규칙: [[ENTITY_RULE]]
 
 ---
@@ -99,3 +98,12 @@ titanic/
 | `titanic_router`를 `main.py`에서 두 번 등록 | 단일 `app.include_router(titanic_router)` |
 | provider 함수명과 router import명 불일치 | `get_*_use_case` 명명 규칙 통일 |
 | `app/domain/` 생성 | `app/use_cases/_*.py` 사용 |
+
+## 타이타닉 도메인 문서 연결
+
+- 타이타닉 도메인 문서 연결
+- 타이타닉 피처 정리[[titanic-features]]
+- 타이타닉 머신러닝[[titanic-machine-learning]]
+- 타이타닉 ERD[[titanic-erd]]
+- 타이타닉 nf[[titanic-nf]]
+- 타이타닉 알고리즘[[titanic-algorithm]]
