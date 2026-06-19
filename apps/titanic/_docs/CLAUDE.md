@@ -99,6 +99,26 @@ titanic/
 | provider 함수명과 router import명 불일치 | `get_*_use_case` 명명 규칙 통일 |
 | `app/domain/` 생성 | `app/use_cases/_*.py` 사용 |
 
+## async def vs def 판단 기준
+
+UseCase / Port 메소드에 `async`를 붙일지 말지는 **I/O 여부**로 결정한다.
+
+| 성격 | 형태 | 예시 |
+|------|------|------|
+| I/O-bound (DB, LLM, HTTP) | `async def` | `introduce_myself`, `receive_uploaded_records` |
+| CPU-bound (형태소 분석, 순수 연산) | `def` | `analyze_intent` (Kiwi) |
+
+`async def`는 코루틴을 만들 뿐, CPU 연산을 비블로킹으로 바꿔주지 않는다.
+Kiwi 같은 CPU 작업에 `async def`를 붙이면 이벤트 루프를 막으면서 비블로킹처럼 보이는 함수가 돼 더 나쁘다.
+
+Kiwi 처리가 무거워 이벤트 루프 블로킹이 실제 문제가 된다면, 포트 시그니처는 `def`로 유지하고 **호출 측**에서 스레드풀로 오프로드한다:
+
+```python
+result = await asyncio.to_thread(use_case.analyze_intent, question)
+```
+
+---
+
 ## 타이타닉 도메인 문서 연결
 
 - 타이타닉 도메인 문서 연결

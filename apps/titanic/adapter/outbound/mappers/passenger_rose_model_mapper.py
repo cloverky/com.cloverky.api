@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional
 
-from clover.apps.titanic.adapter.outbound.orm.passenger_rose_model_orm import RoseModelOrm
+from clover.apps.titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import RoseModelOrm
 
 
 class RoseModelMapper:

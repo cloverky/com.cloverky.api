@@ -38,13 +38,15 @@ from users.db_health_adapter import DbHealthAdapter
 from fridge.models.database import Base, dispose_engine, engine, get_db
 from users.adapter.user import User, UserRole  # noqa: F401 — create_all 에 테이블 등록
 from fridge.adapter.outbound.orm.category_orm import CategoryOrm  # noqa: F401
-from fridge.adapter.outbound.orm.food_orm import FoodOrm  # noqa: F401
+from fridge.adapter.outbound.orm.foods_orm import FoodsOrm  # noqa: F401
 from fridge.adapter.outbound.orm.inventory_orm import InventoryOrm  # noqa: F401
-from fridge.adapter.outbound.orm.receipt_orm import ReceiptLineOrm, ReceiptOrm  # noqa: F401
+from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
+from fridge.adapter.outbound.orm.receipt_line_orm import ReceiptLineOrm  # noqa: F401
 from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import JackTrainerOrm  # noqa: F401
-from titanic.adapter.outbound.orm.passenger_rose_model_orm import RoseModelOrm  # noqa: F401
+from titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import BookingOrm  # noqa: F401
 from fridge.adapter.inbound.api.fridge_router import fridge_router
 from titanic.adapter.inbound.api import titanic_router
+from silicon_valley.adapter.inbound.api import silicon_valley_router
 from secom.app.schemas.user_schema import LoginSchema, UserSchema
 from secom.app.controllers.user_controller import UserController
 
@@ -246,6 +248,7 @@ app.add_middleware(
 
 app.include_router(fridge_router)
 app.include_router(titanic_router)
+app.include_router(silicon_valley_router)
 
 @app.get("/")
 def read_root():

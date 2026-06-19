@@ -3,10 +3,17 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
+import pandas as pd
+
 from titanic.adapter.inbound.api.schemas.crew_Iowe_boat_schema import LoweBoatSchema
-from clover.apps.titanic.app.dtos.crew_lowe_boat_dto import LoweBoatResponse
+from titanic.app.dtos.crew_lowe_boat_dto import LoweBoatResponse
 
 class LoweBoatUseCase(ABC):
+
+    @abstractmethod
+    def feature_engineering(self, train_set) -> pd.DataFrame:
+        ''''''
+        pass
 
     @abstractmethod
     def introduce_myself(self, schema: LoweBoatSchema) -> LoweBoatResponse:

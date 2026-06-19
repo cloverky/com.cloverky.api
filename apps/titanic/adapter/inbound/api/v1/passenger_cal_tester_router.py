@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from titanic.adapter.inbound.api.schemas.passenger_cal_tester_schema import CalTesterSchema
-from clover.apps.titanic.app.dtos.passenger_cal_tester_dto import CalTesterResponse
-from clover.apps.titanic.app.ports.input.passenger_cal_tester_use_case import CalTesterUseCase
-from clover.apps.titanic.dependencies.passenger_cal_tester_provider import get_cal_tester_use_case
+from titanic.app.dtos.passenger_cal_tester_dto import CalTesterResponse
+from titanic.app.ports.input.passenger_cal_tester_use_case import CalTesterUseCase
+from titanic.dependencies.passenger_cal_tester_provider import get_cal_tester_use_case
 
 '''
 칼 캘던 하클리 (Caledon Hockley)

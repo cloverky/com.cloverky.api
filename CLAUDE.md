@@ -39,7 +39,7 @@
 │   ├── inbound/          # 외부 → 앱 (HTTP API, Pydantic schema)
 │   └── outbound/         # 앱 → 외부 (DB, 외부 API, 파일)
 │       ├── orm/          # SQLAlchemy 엔티티
-│       ├── pg/           # Repository 구현체 (*PgRepository)
+│       ├── repositories/ # Repository 구현체 (*PgRepository)
 │       └── gemini/       # (fridge) 외부 AI 연동
 ├── app/
 │   ├── dtos/             # 유스케이스 입출력 데이터
@@ -99,7 +99,7 @@ dependencies     →  adapter/outbound, app/use_cases, app/ports
 |------|------|------|
 | **Port (Interface)** | `app/ports/input`, `app/ports/output` | ABC로 계약 정의 |
 | **Interactor (Use Case)** | `app/use_cases/*_interactor.py` | 포트 구현 + 오케스트레이션 |
-| **Repository** | `*PgRepository` | `ports/output` 구현, ORM↔DTO 변환 |
+| **Repository** | `*PgRepository` | `ports/output` 구현, ORM↔DTO 변환, `adapter/outbound/repositories/` 위치 |
 | **DTO** | `app/dtos/` | 레이어 간 데이터 (ORM/Pydantic과 분리) |
 | **Adapter** | `adapter/inbound/api/schemas` | HTTP 요청/응답 Pydantic + `mappers.py` |
 | **Factory / Composition Root** | `dependencies/*.py` | `Depends(get_db)` + Repository + Interactor 조립 |

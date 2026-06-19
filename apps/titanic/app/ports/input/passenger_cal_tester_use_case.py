@@ -10,6 +10,13 @@ from clover.apps.titanic.app.dtos.passenger_cal_tester_dto import CalTesterRespo
 class CalTesterUseCase(ABC):
 
     @abstractmethod
-    def introduce_myself(self, schema: CalTesterSchema) -> CalTesterResponse:
+
+
+    async def test_model(self, test_set) -> CalTesterResponse:
+        '''칼 테스터가 제안한 모델들을 테스트 시키는 메소드'''
+        pass
+
+    @abstractmethod
+    async def introduce_myself(self, schema: CalTesterSchema) -> CalTesterResponse:
         '''칼 테스터의 자기소개 메소드'''
         pass

@@ -19,7 +19,8 @@ class Base(DeclarativeBase):
 class JackTrainerOrm(Base):
     __tablename__ = "passengers"
 
-    passenger_id: Mapped[str | None] = mapped_column(String, primary_key=True, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    passenger_id: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
     name: Mapped[str | None] = mapped_column(String, nullable=True)
     gender: Mapped[str | None] = mapped_column(String, nullable=True)
     age: Mapped[str | None] = mapped_column(String, nullable=True)
