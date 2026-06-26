@@ -25,8 +25,12 @@ import urllib.parse
 import urllib.request
 from contextlib import asynccontextmanager
 
+import os
+import secrets
+
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,6 +56,22 @@ from secom.app.controllers.user_controller import UserController
 
 keymaker = get_keymaker()
 logger = logging.getLogger(__name__)
+
+_security = HTTPBasic()
+
+
+def require_auth(credentials: HTTPBasicCredentials = Depends(_security)) -> None:
+    """환경변수 API_USERNAME / API_PASSWORD 와 일치해야 통과."""
+    expected_user = os.getenv("API_USERNAME", "admin")
+    expected_pass = os.getenv("API_PASSWORD", "changeme")
+    ok_user = secrets.compare_digest(credentials.username.encode(), expected_user.encode())
+    ok_pass = secrets.compare_digest(credentials.password.encode(), expected_pass.encode())
+    if not (ok_user and ok_pass):
+        raise HTTPException(
+            status_code=401,
+            detail="인증 실패",
+            headers={"WWW-Authenticate": "Basic"},
+        )
 
 logging.basicConfig(level=logging.INFO)
 
@@ -150,12 +170,7 @@ async def _drop_legacy_fridge_tables(conn) -> None:
         "fridge_users",
         "ingredient_manager",
         "inventory_items",
-        "receipt_lines",
-        "receipts",
-        "inventory",
         "codes",
-        "foods",
-        "categories",
     ):
         await conn.execute(text(f'DROP TABLE IF EXISTS "{tbl}" CASCADE'))
 
@@ -236,7 +251,11 @@ async def lifespan(app: FastAPI):
         await dispose_engine()
 
 
-app = FastAPI(title="cloverky Main Page", lifespan=lifespan)
+app = FastAPI(
+    title="cloverky Main Page",
+    lifespan=lifespan,
+    dependencies=[Depends(require_auth)],
+)
 
 app.add_middleware(
     CORSMiddleware,
