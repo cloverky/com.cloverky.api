@@ -1,0 +1,43 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (미사용 import, 변수 등)
+    "I",   # isort (import 정렬)
+    "N",   # pep8 naming convention
+    "UP",  # pyupgrade (구문 현대화)
+    "B",   # flake8-bugbear (잠재적 버그)
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",  # line-length는 ruff format이 처리
+    "B008",  # FastAPI Depends() 패턴 허용
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 하네스: 테스트는 magic value 허용
+"test_*.py" = ["S101", "S105", "S106"]
+# Alembic migration은 naming convention 완화
+"alembic/versions/*.py" = ["N999"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["core", "fridge", "titanic", "secom", "star_craft"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+# FastAPI/SQLAlchemy 타입 플러그인
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# 서드파티 라이브러리 타입 스텁 없는 경우 완화
+module = ["sqlalchemy.*", "alembic.*", "google.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

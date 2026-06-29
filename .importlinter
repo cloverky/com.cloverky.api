@@ -1,0 +1,61 @@
+[importlinter]
+root_packages =
+    fridge
+    titanic
+    secom
+    doro
+    friday_13th
+    imitation_game
+    inception
+    lion_king
+    silicon_valley
+    users
+    star_craft
+    core
+
+[importlinter:contract:star-topology-no-spoke-to-spoke]
+# Harness Rule: 스포크 → 스포크 직접 참조 금지
+# 스포크 간 공유가 필요하면 반드시 star_craft 또는 core를 경유한다.
+name = Spoke modules must not import each other directly
+type = independence
+modules =
+    fridge
+    titanic
+    secom
+    doro
+    friday_13th
+    imitation_game
+    inception
+    lion_king
+    silicon_valley
+    users
+
+[importlinter:contract:clean-arch-inbound-no-outbound]
+# Harness Rule: 클린 아키텍처 — inbound adapter는 outbound를 직접 import 불가
+name = Inbound adapters must not import outbound adapters
+type = forbidden
+source_modules =
+    fridge.adapter.inbound
+    titanic.adapter.inbound
+forbidden_modules =
+    fridge.adapter.outbound
+    titanic.adapter.outbound
+
+[importlinter:contract:clean-arch-usecase-no-adapter]
+# Harness Rule: use_cases는 adapter 구현체를 직접 import 불가 (포트만 의존)
+name = Use cases must not import adapter implementations
+type = forbidden
+source_modules =
+    fridge.app.use_cases
+    titanic.app.use_cases
+forbidden_modules =
+    fridge.adapter
+    titanic.adapter
+
+[importlinter:contract:hub-can-import-spokes]
+# star_craft(Hub)는 모든 스포크를 import할 수 있다 — 허용 규칙 명시
+name = Hub (star_craft) is allowed to import any spoke
+type = layers
+layers =
+    star_craft
+    fridge | titanic | secom | doro | friday_13th | imitation_game | inception | lion_king | silicon_valley | users
