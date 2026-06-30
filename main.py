@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import re
 import selectors
@@ -9,7 +8,9 @@ from pathlib import Path
 # matrix, fridge, titanic 등 앱 패키지는 backend/apps 아래에 있음
 _BACKEND_ROOT = Path(__file__).resolve().parent
 _APPS_DIR = _BACKEND_ROOT / "apps"
-_PROJECT_ROOT = _BACKEND_ROOT.parent  # clover.apps.* / clover.core.* 절대경로 import 지원
+_PROJECT_ROOT = (
+    _BACKEND_ROOT.parent
+)  # clover.apps.* / clover.core.* 절대경로 import 지원
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 if str(_BACKEND_ROOT) not in sys.path:
@@ -20,58 +21,45 @@ if str(_APPS_DIR) not in sys.path:
 # Windows: psycopg async + uvicorn 시 DB 요청이 멈추는 문제 방지
 if sys.platform.startswith("win"):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-import urllib.error
-import urllib.parse
-import urllib.request
+import os
 from contextlib import asynccontextmanager
 
-import os
-import secrets
-
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from messenger.adapter.inbound.api import messenger_router
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from silicon_valley.adapter.inbound.api import silicon_valley_router
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from core.matrix.wault_keymaker_serect_manager import get_keymaker
+from starlette.middleware.sessions import SessionMiddleware
+from users.adapter.user import User, UserRole  # noqa: F401 — create_all 에 테이블 등록
+from users.db_health_adapter import DbHealthAdapter
 from weather_provider import fetch_seoul_weather
 
-from users.db_health_adapter import DbHealthAdapter
-from fridge.models.database import Base, dispose_engine, engine, get_db
-from users.adapter.user import User, UserRole  # noqa: F401 — create_all 에 테이블 등록
+from core.admin_auth import SESSION_SECRET, check_credentials, get_login_html
+from core.matrix.wault_keymaker_serect_manager import get_keymaker
+from fridge.adapter.inbound.api.fridge_router import fridge_router
 from fridge.adapter.outbound.orm.category_orm import CategoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.foods_orm import FoodsOrm  # noqa: F401
 from fridge.adapter.outbound.orm.inventory_orm import InventoryOrm  # noqa: F401
-from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_line_orm import ReceiptLineOrm  # noqa: F401
-from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import JackTrainerOrm  # noqa: F401
-from titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import BookingOrm  # noqa: F401
-from fridge.adapter.inbound.api.fridge_router import fridge_router
-from titanic.adapter.inbound.api import titanic_router
-from silicon_valley.adapter.inbound.api import silicon_valley_router
-from secom.app.schemas.user_schema import LoginSchema, UserSchema
+from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
+from fridge.models.database import Base, dispose_engine, engine, get_db
 from secom.app.controllers.user_controller import UserController
+from secom.app.schemas.user_schema import LoginSchema, UserSchema
+from titanic.adapter.inbound.api import titanic_router
+from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import (
+    JackTrainerOrm,  # noqa: F401
+)
+from titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import (
+    BookingOrm,  # noqa: F401
+)
+from messenger.adapter.outbound.orm.juso_orm import ContactOrm  # noqa: F401
 
 keymaker = get_keymaker()
 logger = logging.getLogger(__name__)
-
-_security = HTTPBasic()
-
-
-def require_auth(credentials: HTTPBasicCredentials = Depends(_security)) -> None:
-    """환경변수 API_USERNAME / API_PASSWORD 와 일치해야 통과."""
-    expected_user = os.getenv("API_USERNAME", "admin")
-    expected_pass = os.getenv("API_PASSWORD", "changeme")
-    ok_user = secrets.compare_digest(credentials.username.encode(), expected_user.encode())
-    ok_pass = secrets.compare_digest(credentials.password.encode(), expected_pass.encode())
-    if not (ok_user and ok_pass):
-        raise HTTPException(
-            status_code=401,
-            detail="인증 실패",
-            headers={"WWW-Authenticate": "Basic"},
-        )
 
 logging.basicConfig(level=logging.INFO)
 
@@ -233,13 +221,16 @@ async def _migrate_tables() -> None:
             ),
         )
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("DB 마이그레이션 시작…")
     try:
         await asyncio.wait_for(_migrate_tables(), timeout=45.0)
-    except asyncio.TimeoutError:
-        logger.error("DB 마이그레이션 시간 초과(45s). DATABASE_URL·Neon 연결을 확인하세요.")
+    except TimeoutError:
+        logger.error(
+            "DB 마이그레이션 시간 초과(45s). DATABASE_URL·Neon 연결을 확인하세요."
+        )
         raise
     except Exception:
         logger.exception("DB 마이그레이션 실패")
@@ -254,7 +245,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="cloverky Main Page",
     lifespan=lifespan,
-    dependencies=[Depends(require_auth)],
+    docs_url=None,
+    redoc_url=None,
 )
 
 app.add_middleware(
@@ -264,14 +256,58 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
+
+
+@app.get("/login", include_in_schema=False, response_model=None)
+async def login_page(request: Request):
+    if request.session.get("authenticated"):
+        return RedirectResponse(url="/docs")
+    return HTMLResponse(content=get_login_html())
+
+
+@app.post("/login", include_in_schema=False, response_model=None)
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+):
+    if check_credentials(username, password):
+        request.session["authenticated"] = True
+        return RedirectResponse(url="/docs", status_code=303)
+    return HTMLResponse(content=get_login_html(error=True), status_code=401)
+
+
+@app.get("/logout", include_in_schema=False, response_model=None)
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login")
+
+
+@app.get("/docs", include_in_schema=False, response_model=None)
+async def custom_docs(request: Request):
+    if not request.session.get("authenticated"):
+        return RedirectResponse(url="/login")
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="cloverky API")
+
+
+@app.get("/openapi.json", include_in_schema=False, response_model=None)
+async def custom_openapi(request: Request):
+    if not request.session.get("authenticated"):
+        return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+    return JSONResponse(app.openapi())
+
 
 app.include_router(fridge_router)
 app.include_router(titanic_router)
 app.include_router(silicon_valley_router)
+app.include_router(messenger_router)
 
-@app.get("/")
-def read_root():
-    return {"message": "FAST API 메인 페이지 ", "docs": "/docs"}
+
+@app.get("/", include_in_schema=False, response_model=None)
+async def read_root(request: Request):
+    request.session.clear()
+    return HTMLResponse(content=get_login_html())
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -297,7 +333,9 @@ def chat(req: ChatRequest) -> ChatResponse:
 
     text = (response.text or "").strip()
     if not text:
-        raise HTTPException(status_code=502, detail="모델이 비어 있는 응답을 반환했습니다.")
+        raise HTTPException(
+            status_code=502, detail="모델이 비어 있는 응답을 반환했습니다."
+        )
 
     return ChatResponse(reply=text)
 
@@ -310,7 +348,9 @@ def get_weather(
     """
     서울(또는 지정 도시) 날씨. OpenWeather 우선, 실패 시 Open-Meteo·기본값으로 항상 200 응답.
     """
-    appid = keymaker.get_openweather_api_key() if keymaker.is_openweather_ready() else None
+    appid = (
+        keymaker.get_openweather_api_key() if keymaker.is_openweather_ready() else None
+    )
     q_city = (city or keymaker.get_openweather_default_city()).strip()
     q_country = (country or keymaker.get_openweather_default_country()).strip()
     payload = fetch_seoul_weather(
@@ -324,6 +364,7 @@ def get_weather(
 @app.get("/db-check")
 async def check_db(db: AsyncSession = Depends(get_db)):
     return await DbHealthAdapter.neon_time_check(db)
+
 
 # 회원가입 · 로그인 (Neon DB — 비밀번호 해시 저장)
 @app.get("/signup/check-username", response_model=UsernameCheckResponse)
@@ -343,11 +384,13 @@ async def check_username(
     try:
         result = await asyncio.wait_for(
             db.execute(
-                select(User.id).where(func.lower(User.username) == _username_key(u)).limit(1),
+                select(User.id)
+                .where(func.lower(User.username) == _username_key(u))
+                .limit(1),
             ),
             timeout=8.0,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         raise HTTPException(
             status_code=503,
             detail="DB 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.",
@@ -374,7 +417,9 @@ async def check_username(
 
 
 @app.post("/signup", response_model=SignUpResponse)
-async def signup(req: SignUpRequest, db: AsyncSession = Depends(get_db)) -> SignUpResponse:
+async def signup(
+    req: SignUpRequest, db: AsyncSession = Depends(get_db)
+) -> SignUpResponse:
     """
     회원가입 — FastAPI + Neon DB.
 
@@ -449,15 +494,16 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)) -> LoginR
     )
 
 
-
-
 if __name__ == "__main__":
     import os
 
     import uvicorn
 
     # Windows reload 자식 프로세스 오류 방지: 기본은 reload 끔. 필요 시 set UVICORN_RELOAD=1
-    reload = os.getenv("UVICORN_RELOAD", "0" if sys.platform.startswith("win") else "1") == "1"
+    reload = (
+        os.getenv("UVICORN_RELOAD", "0" if sys.platform.startswith("win") else "1")
+        == "1"
+    )
     logger.info("uvicorn 시작 — reload=%s http://127.0.0.1:8000", reload)
     host = "127.0.0.1"
     port = int(os.getenv("PORT", "8000"))
