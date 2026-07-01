@@ -57,6 +57,7 @@ from titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import (
     BookingOrm,  # noqa: F401
 )
 from messenger.adapter.outbound.orm.juso_orm import ContactOrm  # noqa: F401
+from messenger.adapter.outbound.orm.mail_orm import MailInboxOrm  # noqa: F401
 
 keymaker = get_keymaker()
 logger = logging.getLogger(__name__)

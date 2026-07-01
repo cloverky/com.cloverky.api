@@ -1,20 +1,22 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from messenger.adapter.inbound.api.schemas.mail_schema import (
+    MailInboxItemResponse,
+    MailInboxListResponse,
+    MailInboxWebhookRequest,
     MailRequest,
     MailResponse,
 )
-from messenger.app.dtos.mail_dto import MailCommand, MailMessengerQuery
+from messenger.app.dtos.mail_dto import (
+    MailCommand,
+    MailInboxReceiveCommand,
+    MailMessengerQuery,
+)
 from messenger.app.ports.input.mail_use_case import MailUseCase
 from messenger.dependencies.mail import get_mail_use_case
 
 logger = logging.getLogger(__name__)
-
-"""
-메신저 (Mail Messenger)
-Exaone LLM이 내용을 작성하고 n8n 웹훅을 통해 Gmail로 발송하는 메일 서비스.
-"""
 
 mail_router = APIRouter(prefix="/mail", tags=["messenger"])
 
@@ -24,7 +26,7 @@ async def send_mail(
     req: MailRequest,
     use_case: MailUseCase = Depends(get_mail_use_case),
 ) -> MailResponse:
-    logger.info("메일 발송 수신 — to: %r, subject: %r", req.to, req.subject)
+    logger.info("메일 발송 — to: %r, subject: %r", req.to, req.subject)
     result = await use_case.send_mail(
         MailCommand(
             to=req.to,
@@ -34,6 +36,50 @@ async def send_mail(
         )
     )
     return MailResponse(success=result.success, message=result.message)
+
+
+@mail_router.post("/inbox", response_model=MailInboxItemResponse)
+async def receive_mail(
+    req: MailInboxWebhookRequest,
+    use_case: MailUseCase = Depends(get_mail_use_case),
+) -> MailInboxItemResponse:
+    """n8n Gmail Trigger가 새 메일 수신 시 호출하는 웹훅 엔드포인트."""
+    logger.info("수신 메일 저장 — from: %r, subject: %r", req.from_email, req.subject)
+    item = await use_case.receive_mail(
+        MailInboxReceiveCommand(
+            from_email=req.from_email,
+            subject=req.subject,
+            body=req.body,
+        )
+    )
+    return MailInboxItemResponse(
+        id=item.id,
+        from_email=item.from_email,
+        subject=item.subject,
+        body=item.body,
+        received_at=item.received_at,
+    )
+
+
+@mail_router.get("/inbox", response_model=MailInboxListResponse)
+async def list_inbox(
+    limit: int = Query(50, ge=1, le=200),
+    use_case: MailUseCase = Depends(get_mail_use_case),
+) -> MailInboxListResponse:
+    """수신 메일함 목록 조회."""
+    result = await use_case.list_inbox(limit=limit)
+    return MailInboxListResponse(
+        items=[
+            MailInboxItemResponse(
+                id=it.id,
+                from_email=it.from_email,
+                subject=it.subject,
+                body=it.body,
+                received_at=it.received_at,
+            )
+            for it in result.items
+        ]
+    )
 
 
 @mail_router.get("/myself")

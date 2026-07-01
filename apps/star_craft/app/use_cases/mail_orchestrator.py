@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 _TAG_PATTERN = re.compile(r"\[.*?\]")
 _MARKDOWN_PATTERN = re.compile(r"(\*\*|__|##|---)")
 _LABEL_PATTERN = re.compile(
-    r"^(도입부|본론|맺음말|인사말|서론|결론|내용|요약)\s*:\s*", re.MULTILINE
+    r"^(도입부|본론|맺음말|인사말|서론|결론|내용|요약|서명)\s*:\s*", re.MULTILINE
 )
 
 

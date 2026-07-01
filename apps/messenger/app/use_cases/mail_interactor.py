@@ -1,5 +1,8 @@
 from messenger.app.dtos.mail_dto import (
     MailCommand,
+    MailInboxItem,
+    MailInboxListResult,
+    MailInboxReceiveCommand,
     MailMessengerQuery,
     MailMessengerResponse,
     MailResult,
@@ -27,6 +30,13 @@ class MailInteractor(MailUseCase):
             email_type=cmd.email_type,
         )
         return MailResult(success=True, message=f"{cmd.to} 으로 발송 완료")
+
+    async def receive_mail(self, cmd: MailInboxReceiveCommand) -> MailInboxItem:
+        return await self._repository.save_inbox(cmd)
+
+    async def list_inbox(self, limit: int = 50) -> MailInboxListResult:
+        items = await self._repository.list_inbox(limit=limit)
+        return MailInboxListResult(items=items)
 
     async def introduce_myself(
         self, query: MailMessengerQuery

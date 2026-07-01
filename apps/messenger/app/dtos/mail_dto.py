@@ -1,4 +1,7 @@
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
 
 from star_craft.domain.ontology.mail.mail_taxonomy import EmailType
 
@@ -28,3 +31,24 @@ class MailMessengerResponse:
     id: int
     name: str
     description: str
+
+
+@dataclass
+class MailInboxReceiveCommand:
+    from_email: str
+    subject: str | None
+    body: str | None
+
+
+@dataclass(frozen=True)
+class MailInboxItem:
+    id: int
+    from_email: str
+    subject: str | None
+    body: str | None
+    received_at: datetime
+
+
+@dataclass
+class MailInboxListResult:
+    items: list[MailInboxItem] = field(default_factory=list)
