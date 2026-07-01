@@ -1,6 +1,9 @@
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from messenger.adapter.outbound.push.web_push_sender import send_push
+from messenger.adapter.outbound.repositories.push_repository import PushSubscriptionRepository
 from messenger.adapter.inbound.api.schemas.mail_schema import (
     MailInboxItemResponse,
     MailInboxListResponse,
@@ -15,6 +18,9 @@ from messenger.app.dtos.mail_dto import (
 )
 from messenger.app.ports.input.mail_use_case import MailUseCase
 from messenger.dependencies.mail import get_mail_use_case
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.matrix.oracle_database import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +48,7 @@ async def send_mail(
 async def receive_mail(
     req: MailInboxWebhookRequest,
     use_case: MailUseCase = Depends(get_mail_use_case),
+    db: AsyncSession = Depends(get_db),
 ) -> MailInboxItemResponse:
     """n8n Gmail Trigger가 새 메일 수신 시 호출하는 웹훅 엔드포인트."""
     logger.info("수신 메일 저장 — from: %r, subject: %r", req.from_email, req.subject)
@@ -52,6 +59,20 @@ async def receive_mail(
             body=req.body,
         )
     )
+
+    # 브라우저 푸시 알림 (fire-and-forget)
+    async def _send_push_to_all() -> None:
+        push_repo = PushSubscriptionRepository(db)
+        subs = await push_repo.list_all()
+        title = f"새 메일: {req.from_email}"
+        body = req.subject or "(제목 없음)"
+        await asyncio.gather(
+            *[asyncio.to_thread(send_push, ep, p256dh, auth, title, body) for ep, p256dh, auth in subs],
+            return_exceptions=True,
+        )
+
+    asyncio.create_task(_send_push_to_all())
+
     return MailInboxItemResponse(
         id=item.id,
         from_email=item.from_email,

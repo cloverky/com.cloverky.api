@@ -1,8 +1,3 @@
-## python 3.13
---extra-index-url https://download.pytorch.org/whl/cu126
-torch==2.12.0+cu126
-torchvision==0.27.0+cu126
-torchaudio
 mcp
 itsdangerous>=2.1.2
 fastapi==0.136.1
@@ -13,13 +8,8 @@ sqlalchemy[asyncio]==2.0.49
 alembic==1.18.4
 psycopg[binary]==3.3.4
 python-dotenv==1.2.2
-pandas==2.3.0
-joblib==1.5.3
-scikit-learn==1.8.0
-matplotlib==3.10.3
-seaborn==0.13.2
 numpy==2.2.6
-kiwipiepy==0.23.1
+scikit-learn>=1.5.0
 ollama==0.6.2
 httpx>=0.27.0
 pywebpush==2.0.0
@@ -27,5 +17,3 @@ sqlmodel==0.0.38
 langchain==1.3.11
 langsmith==0.9.3
 langgraph==1.2.6
-pytest>=8.0
-pytest-asyncio>=0.23
