@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from messenger.adapter.inbound.api.schemas.mail_schema import (
     MailInboxItemResponse,
     MailInboxListResponse,
@@ -80,6 +80,25 @@ async def list_inbox(
             for it in result.items
         ]
     )
+
+
+@mail_router.delete("/inbox/{item_id}")
+async def delete_inbox_item(
+    item_id: int = Path(..., ge=1),
+    use_case: MailUseCase = Depends(get_mail_use_case),
+) -> dict:
+    deleted = await use_case.delete_inbox_item(item_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="메일을 찾을 수 없습니다.")
+    return {"deleted": True}
+
+
+@mail_router.delete("/inbox")
+async def delete_all_inbox(
+    use_case: MailUseCase = Depends(get_mail_use_case),
+) -> dict:
+    count = await use_case.delete_all_inbox()
+    return {"deleted": count}
 
 
 @mail_router.get("/myself")

@@ -10,7 +10,7 @@ from messenger.app.dtos.mail_dto import (
     MailMessengerResponse,
 )
 from messenger.app.ports.output.mail_repository_port import MailRepositoryPort
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
@@ -49,6 +49,18 @@ class MailPgRepository(MailRepositoryPort):
             body=row.body,
             received_at=row.received_at,
         )
+
+    async def delete_inbox_item(self, item_id: int) -> bool:
+        result = await self.session.execute(
+            delete(MailInboxOrm).where(MailInboxOrm.id == item_id)
+        )
+        await self.session.commit()
+        return result.rowcount > 0
+
+    async def delete_all_inbox(self) -> int:
+        result = await self.session.execute(delete(MailInboxOrm))
+        await self.session.commit()
+        return result.rowcount
 
     async def list_inbox(self, limit: int = 50) -> list[MailInboxItem]:
         result = await self.session.execute(

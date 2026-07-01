@@ -38,6 +38,12 @@ class MailInteractor(MailUseCase):
         items = await self._repository.list_inbox(limit=limit)
         return MailInboxListResult(items=items)
 
+    async def delete_inbox_item(self, item_id: int) -> bool:
+        return await self._repository.delete_inbox_item(item_id)
+
+    async def delete_all_inbox(self) -> int:
+        return await self._repository.delete_all_inbox()
+
     async def introduce_myself(
         self, query: MailMessengerQuery
     ) -> MailMessengerResponse:

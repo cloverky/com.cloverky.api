@@ -21,3 +21,9 @@ class MailRepositoryPort(ABC):
 
     @abstractmethod
     async def list_inbox(self, limit: int = 50) -> list[MailInboxItem]: ...
+
+    @abstractmethod
+    async def delete_inbox_item(self, item_id: int) -> bool: ...
+
+    @abstractmethod
+    async def delete_all_inbox(self) -> int: ...
