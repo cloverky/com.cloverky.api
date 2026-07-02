@@ -9,7 +9,7 @@ from messenger.adapter.inbound.api.schemas.telegram_schema import (
 )
 from messenger.app.dtos.telegram_dto import TelegramMessengerQuery, TelegramSendCommand
 from messenger.app.ports.input.telegram_use_case import TelegramUseCase
-from messenger.dependencies.telegram import get_telegram_use_case
+from clover.apps.messenger.dependencies.telegram_provider import get_telegram_use_case
 
 _MY_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 

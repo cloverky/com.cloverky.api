@@ -9,6 +9,7 @@ messenger_router = APIRouter(prefix="/messenger", tags=["messenger"])
 
 _routers = [
     ("messenger.adapter.inbound.api.v1.mail_router", "mail_router"),
+    ("messenger.adapter.inbound.api.v1.receive_router", "receive_router"),
     ("messenger.adapter.inbound.api.v1.juso_router", "juso_router"),
     ("messenger.adapter.inbound.api.v1.discord_router", "discord_router"),
     ("messenger.adapter.inbound.api.v1.telegram_router", "telegram_router"),

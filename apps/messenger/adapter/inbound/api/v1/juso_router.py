@@ -14,7 +14,7 @@ from messenger.app.dtos.juso_dto import (
     JusoSearchCommand,
 )
 from messenger.app.ports.input.juso_use_case import JusoUseCase
-from messenger.dependencies.juso import get_juso_use_case
+from clover.apps.messenger.dependencies.juso_provider import get_juso_use_case
 
 logger = logging.getLogger(__name__)
 

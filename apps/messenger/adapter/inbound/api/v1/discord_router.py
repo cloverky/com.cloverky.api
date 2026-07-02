@@ -7,7 +7,7 @@ from messenger.adapter.inbound.api.schemas.discord_schema import (
 )
 from messenger.app.dtos.discord_dto import DiscordMessengerQuery, DiscordSendCommand
 from messenger.app.ports.input.discord_use_case import DiscordUseCase
-from messenger.dependencies.discord import get_discord_use_case
+from clover.apps.messenger.dependencies.discord_provider import get_discord_use_case
 
 logger = logging.getLogger(__name__)
 

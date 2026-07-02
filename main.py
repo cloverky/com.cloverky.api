@@ -208,6 +208,7 @@ async def _ensure_entity_rule_schema(conn) -> None:
 async def _migrate_tables() -> None:
     """users·fridge 도메인 테이블 생성 및 ENTITY_RULE·스키마 보강."""
     async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await _drop_legacy_fridge_tables(conn)
         await conn.run_sync(Base.metadata.create_all)
         await _ensure_entity_rule_schema(conn)
