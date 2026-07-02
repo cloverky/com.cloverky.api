@@ -1,55 +1,73 @@
-# [Specification] Multi-Agent System Test Harness Specification
+# [Specification] Watson Watcher Hub — 정책 기반 필터링 및 트리아지 명세
 
-## 1. System Overview & Architecture Context
+## 1. 시스템 개요 및 아키텍처 맥락
 
-본 시스템은 허브 앤 스포크(Hub-and-Spoke) 및 온톨로지 기반의 거대 비즈니스 ERP 멀티 에이전트 아키텍처이다.
+본 시스템은 허브 앤 스포크(Hub-and-Spoke) 및 온톨로지 기반의 멀티 에이전트 아키텍처이며,
+인바운드 게이트웨이 단계에서 정책 기반 비속어/욕설 필터링(KcELECTRA)을 통합한 트리아지 환경을 정의한다.
 
-- **최고 사령탑 (Hub / Brain)**: `core/lol/t1_mid_faker_orchestrator.py`
-  초거대 AI 모델(EXAONE)이 상주하는 최고 권한의 오케스트레이터 에이전트.
-- **온톨로지 버스 (Ontology Hub)**: `star_craft/`
-  전사 데이터 흐름, 엔티티 관계(Ontology) 및 전사 컨텍스트를 총괄하는 데이터 허브 버스.
-- **커뮤니케이션 스포크 (Communication Spoke)**: `sherlock_homes/`
-  외부 채널(Email, Mail, Telegram, Discord 등)과의 소통 및 인바운드 이벤트를 전담하는 스포크.
-- **기타 스포크 (Spokes)**: `titanic/`, `silicon_valley/` 등 (ERP의 개별 도메인 파트)
+| 구분 | 역할 | 실제 경로 |
+|------|------|-----------|
+| **Hub / Brain** | 최고 오케스트레이터 (EXAONE) | `core/lol/t1_mid_faker_orchestrator.py` |
+| **Ontology Hub** | 전사 데이터 흐름 및 온톨로지 총괄 | `apps/star_craft/` |
+| **Communication Spoke** | 외부 채널 인바운드 전담 | `apps/messenger/` |
+| **Triage Nurse (Watson)** | 정책 필터링 + 1차 의도 분류 게이트웨이 | `apps/messenger/adapter/inbound/api/v1/watcher_router.py` |
 
-## 2. Agent Core Logic & Routing Criteria
+---
 
-외부 커뮤니케이션 채널을 통해 인입되는 이벤트는 비즈니스 중요도 및 의도(Intent)에 따라 다음과 같이 라우팅된다.
+## 2. 에이전트 핵심 로직 및 라우팅 기준
 
-- **Case A (일반 업무)**: 중요 거래처가 아니거나 단순 문의인 경우
-  ➔ `sherlock_homes` 내부의 홈즈(Holmes) 에이전트가 자체적으로 컨텍스트를 소화하여 처리 및 종결.
-- **Case B (중요/에스컬레이션 업무)**: 중요 거래처이거나 자동 보고서 생성을 요청하는 경우
-  ➔ 상위 온톨로지 버스인 `star_craft`를 경유하여 최고 에이전트인 **페이커(Faker / EXAONE)**에게 격상(Escalation). 페이커가 전사 ERP 데이터를 취합하여 최종 보고서를 생성하고 하향 전달.
+외부 채널(`telegram_router`, `discord_router`, `receive_router`)로 수신된 모든 인바운드 이벤트는 Watson 게이트웨이에서 아래 3단계 정책에 따라 검증 및 라우팅된다.
 
-## 3. Watson (Watcher Hub / Entry Point) 역할 정의
+### [Step 1] 정책 필터링 — 비속어/욕설 차단
 
-`sherlock_homes/adapter/inbound/` 레이어에 위치한 **왓슨(Watson)**은 본 테스트 하네스의 핵심 검증 대상이자 인바운드 게이트웨이이다. 왓슨은 단순한 라우터가 아닌 **'Triage Nurse(초진 및 분류 관문)'** 역할을 수행한다.
+- **적용 모델**: `beomi/KcELECTRA-base` (구어체·자음 조합 악성 발언 탐지 특화)
+- **동작**: 인입 텍스트를 분석하여 정책 위반 여부 판단
+- **위반 감지 시**: 이후 모든 라우팅을 즉각 중단 → 이벤트 폐기(Drop) → 보안 로그 기록
+- **통과 시**: Step 2로 진행
 
-### 왓슨의 핵심 메커니즘
+### [Step 2] 일반 업무 분류 (Case A — Holmes)
 
-1. **감시 및 후킹 (Watch & Hook)**: 경찰/조력자 레이어(`police_lestrade_telegram`, `police_anderson_discord` 등)로부터 유저 메시지 및 이벤트를 낚아챔.
-2. **1차 분류 및 조율 (Validation & Triage)**: 인입된 메시지의 발신자(중요 거래처 여부)와 본문(보고서 요청 등의 의도)을 가볍고 빠르게 분석.
-3. **컨텍스트 스위칭 및 라우팅 (Routing Decision)**:
-   - 일반 메일 ➔ `sherlock_homes/app/use_cases` (홈즈) 호출.
-   - 중요/보고서 메일 ➔ `star_craft` 온톨로지 버스로 이벤트 발행(Publish).
+- **조건**: Step 1 통과 + 중요 거래처 아님 (`important_client: false`) 또는 단순 문의
+- **결과**: `messenger/app/use_cases/` 인터랙터가 자체 처리 및 종결
+- **routing 값**: `"holmes"`
 
-## 4. Test Harness Implementation Instructions (for Claude)
+### [Step 3] 에스컬레이션 업무 분류 (Case B — Faker)
 
-이 마크다운을 컨텍스트로 받는 LLM(클로드)은 위 설계를 검증하기 위한 테스트 하네스(Test Harness) 환경 코드를 다음 지시사항에 따라 생성하시오.
+- **조건**: Step 1 통과 + `important_client: true` + 보고서/실적 요청 의도 감지
+- **에스컬레이션 키워드**: `"보고서"`, `"실적"`, `"에스컬레이션"`, `"report"`, `"escalat"`
+- **결과**: `apps/star_craft/app/use_cases/mail_orchestrator.py` 경유 → `core/lol/t1_mid_faker_orchestrator.py` 최종 활성화
+- **routing 값**: `"faker"`
 
-### [지시사항 1] 가상 이벤트 생성기 (Mock Event Generator) 구현
+---
 
-- `police_lestrade_telegram_router`, `police_anderson_discord_router` 등 인바운드 라우터들이 외부에서 메일/메시지를 수신하는 상황을 모사하는 Mock 데이터 생성기를 작성할 것.
-- 테스트 케이스 시나리오는 최소 2가지 이상을 포함해야 함:
-  - **Scenario 1**: 일반 거래처의 단순 인사/일반 문의 메일 인입.
-  - **Scenario 2**: VIP 거래처(`important_client: true`)의 "분기 실적 자동 보고서 발행 요망" 메시지 인입.
+## 3. 구현 파일 맵
 
-### [지시사항 2] 왓슨(Watson Watcher Hub)의 라우팅 인터셉터 구현
+| 레이어 | 파일 경로 |
+|--------|-----------|
+| 인바운드 라우터 | `messenger/adapter/inbound/api/v1/watcher_router.py` |
+| 스키마 | `messenger/adapter/inbound/api/schemas/watcher_schema.py` |
+| UseCase 포트 | `messenger/app/ports/input/watcher_use_case.py` |
+| DTO | `messenger/app/dtos/watcher_dto.py` |
+| 인터랙터 (트리아지 + 필터링 로직) | `messenger/app/use_cases/watcher_interactor.py` |
+| DI 팩토리 | `messenger/dependencies/watcher_provider.py` |
+| 온톨로지 버스 (에스컬레이션 대상) | `apps/star_craft/app/use_cases/mail_orchestrator.py` |
+| 최고 오케스트레이터 | `core/lol/t1_mid_faker_orchestrator.py` |
 
-- 가상 이벤트 생성기에서 발생한 raw 데이터를 왓슨 인터페이스(`detective_watson_watcher_hub.py`)가 가로채어 검증하는 라우팅 로직을 구현할 것.
-- **홈즈 호출 트리거**: Scenario 1 감지 시, `sherlock_homes/app/use_cases/` 내의 가상 홈즈 모듈 함수를 호출하고 로그를 남길 것.
-- **페이커 에스컬레이션 트리거**: Scenario 2 감지 시, 상위 허브인 `star_craft` 프로토콜 메커니즘을 거쳐 `core/lol/t1_mid_faker_orchestrator.py`가 최종 활성화(Wake-up)되는 이벤트 버스 파이프라인(가상 MCP Notification 등)을 구현할 것.
+---
 
-### [지시사항 3] 하네스 대시보드 및 검증 로그 출력
+## 4. 테스트 시나리오
 
-- 이벤트 인입부터 최종 처리 완료(Watson ➔ Holmes 또는 Watson ➔ StarCraft ➔ Faker)까지의 전체 멀티 에이전트 저니(Journey)를 콘솔 내에 추적 서사 로그(Narrative Log) 형태로 일목요연하게 출력하는 모니터링 기능을 포함할 것.
+| # | 발신자 | 메시지 특성 | Step 1 결과 | 최종 라우팅 |
+|---|--------|------------|-------------|------------|
+| Scenario A | 일반 거래처 | 단순 인사/문의 | 통과 | `holmes` — 내부 처리 |
+| Scenario B | 중요 거래처 | 비속어·욕설 포함 보고서 요청 | **차단** | 폐기 + 보안 로그 |
+| Scenario C | VIP 거래처 | 정상 "분기 실적 보고서 요청" | 통과 | `faker` — 에스컬레이션 |
+
+---
+
+## 5. Docker 인프라 요구사항
+
+- **Base Image**: `python:3.10-slim` 계열 경량 이미지
+- **의존성**: `torch`, `transformers` (KcELECTRA 추론용)
+- **환경 변수**: `PYTHONUNBUFFERED=1` (실시간 콘솔 출력)
+- **실행 구조**: 컨테이너 기동 즉시 테스트 하네스 실행 → 이벤트 인입부터 최종 에이전트 도달까지 전체 저니를 서사 로그(Narrative Log) 형태로 콘솔 출력

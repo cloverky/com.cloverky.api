@@ -10,10 +10,13 @@ from messenger.adapter.inbound.api.schemas.mail_schema import (
 from messenger.adapter.outbound.push.web_push_sender import send_push
 from messenger.adapter.outbound.repositories.push_repository import PushSubscriptionRepository
 from messenger.app.dtos.mail_dto import MailInboxReceiveCommand
+from messenger.app.dtos.watcher_dto import RoutingDecision, WatcherTriageCommand
 from messenger.app.ports.input.mail_use_case import MailUseCase
 from messenger.app.ports.input.receive_use_case import ReceiveUseCase
+from messenger.app.ports.input.watcher_use_case import WatcherUseCase
 from messenger.dependencies.mail_provider import get_mail_use_case
 from messenger.dependencies.receive_provider import get_receive_use_case
+from messenger.dependencies.watcher_provider import get_watcher_use_case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from clover.core.matrix.grid_oracle_database_manager import get_db
@@ -28,9 +31,23 @@ async def receive_mail(
     req: MailInboxWebhookRequest,
     use_case: MailUseCase = Depends(get_mail_use_case),
     receive: ReceiveUseCase = Depends(get_receive_use_case),
+    watcher: WatcherUseCase = Depends(get_watcher_use_case),
     db: AsyncSession = Depends(get_db),
 ) -> MailInboxItemResponse:
     """n8n Gmail Trigger가 새 메일 수신 시 호출하는 웹훅 엔드포인트."""
+    # DB 저장 전 욕설 필터링
+    embed_text = " ".join(filter(None, [req.subject, req.body]))
+    triage = await watcher.triage(
+        WatcherTriageCommand(
+            from_email=req.from_email,
+            subject=req.subject,
+            body=req.body,
+        )
+    )
+    if triage.routing == RoutingDecision.BLOCKED:
+        logger.warning("욕설 필터링 — from=%r 메일 차단", req.from_email)
+        raise HTTPException(status_code=400, detail="정책 위반 메일 — 수신 거부")
+
     logger.info("수신 메일 저장 — from: %r, subject: %r", req.from_email, req.subject)
     item = await use_case.receive_mail(
         MailInboxReceiveCommand(
@@ -39,8 +56,6 @@ async def receive_mail(
             body=req.body,
         )
     )
-
-    embed_text = " ".join(filter(None, [req.subject, req.body]))
 
     async def _background() -> None:
         push_repo = PushSubscriptionRepository(db)

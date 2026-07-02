@@ -13,6 +13,7 @@ _routers = [
     ("messenger.adapter.inbound.api.v1.juso_router", "juso_router"),
     ("messenger.adapter.inbound.api.v1.discord_router", "discord_router"),
     ("messenger.adapter.inbound.api.v1.telegram_router", "telegram_router"),
+    ("messenger.adapter.inbound.api.v1.watcher_router", "watcher_router"),
 ]
 
 for _mod, _attr in _routers:

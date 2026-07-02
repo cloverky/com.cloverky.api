@@ -272,11 +272,11 @@ n8n Cloud를 쓰거나 Gmail을 비정상적으로 대량 호출하는 경우에
 ## 13. 단계별 완료 체크리스트
 
 - [ ] n8n 셀프호스팅 실행
-- [ ] (택1) 폴링 Gmail Trigger 또는 Push 전체 체인 구성
+- [ ] (실시간 동기화) 폴링 Gmail Push 로 전체 체인 구성
 - [ ] Cloudflare Tunnel 공개 주소 확보 및 헬스체크
 - [ ] n8n Webhook 노드 (`/webhook/gmail-push`) 생성
 - [ ] Pub/Sub 토픽 생성 + Gmail Publisher 권한 부여
-- [ ] Push 구독 생성 (엔드포인트 = 터널 URL)
+- [ ] Push 구독 생성 (엔드포인트 = 퀵 터널 URL)
 - [ ] `users.watch()` 등록 (historyId/expiration 응답 확인)
 - [ ] 메일 조회 → 백엔드 전송 노드 구성 및 실제 메일로 종단 테스트
 - [ ] watch 갱신 Schedule Trigger 등록 및 활성화
