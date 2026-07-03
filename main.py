@@ -60,6 +60,7 @@ from messenger.adapter.outbound.orm.juso_orm import ContactOrm  # noqa: F401
 from messenger.adapter.outbound.orm.mail_orm import MailInboxOrm  # noqa: F401
 from messenger.adapter.outbound.orm.push_orm import PushSubscriptionOrm  # noqa: F401
 from messenger.adapter.inbound.api.v1.push_router import push_router
+from vision.adapter.inbound.api.v1.vision_router import vision_router
 
 keymaker = get_keymaker()
 logger = logging.getLogger(__name__)
@@ -307,6 +308,7 @@ app.include_router(titanic_router)
 app.include_router(silicon_valley_router)
 app.include_router(messenger_router)
 app.include_router(push_router, prefix="/messenger")
+app.include_router(vision_router)
 
 
 @app.get("/", include_in_schema=False, response_model=None)
