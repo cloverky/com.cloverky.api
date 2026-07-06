@@ -1,0 +1,7 @@
+path: apps/vision/resources/yolo_train
+train: images/train
+val: images/val
+
+nc: 1
+names:
+  - face
