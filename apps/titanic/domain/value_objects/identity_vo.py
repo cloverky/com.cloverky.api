@@ -1,7 +1,7 @@
 from __future__ import annotations
+
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 from titanic.domain.value_objects.gender_vo import Gender
 from titanic.domain.value_objects.title_vo import Title
@@ -15,11 +15,12 @@ class PassengerIdentity:
 
     Gender↔Title +0.45 — 두 피처가 동일한 '사회적 정체성'을 표현.
     """
+
     gender: Gender
     title: Title
 
     @classmethod
-    def from_raw(cls, gender: Optional[str], name: Optional[str]) -> "PassengerIdentity":
+    def from_raw(cls, gender: str | None, name: str | None) -> PassengerIdentity:
         match = _TITLE_RE.search(name or "")
         extracted = match.group(1) if match else None
         return cls(

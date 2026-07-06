@@ -1,4 +1,5 @@
 """Keymaker — API 키 관리 및 외부 서비스 클라이언트 팩토리."""
+
 from __future__ import annotations
 
 import os
@@ -17,6 +18,7 @@ class Keymaker:
 
     def get_gemini_client(self):
         from google import genai
+
         return genai.Client(api_key=os.getenv("GEMINI_API_KEY", ""))
 
     def is_openweather_ready(self) -> bool:

@@ -6,7 +6,6 @@ from clover.apps.fridge.app.dtos.category_dto import CategoryQuery, CategoryResp
 
 
 class CategoryRepository(ABC):
-
     @abstractmethod
     async def get_list(self, query: CategoryQuery) -> CategoryResponse:
         pass

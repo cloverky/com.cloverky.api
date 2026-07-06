@@ -161,3 +161,10 @@ Desktop.ini
 .terraform.lock.hcl
 *.auto.tfvars
 *.auto.tfvars.json
+
+
+auth.txt
+
+# YOLO 테스트 스크래치 파일
+bus.jpg
+yolo11n.pt

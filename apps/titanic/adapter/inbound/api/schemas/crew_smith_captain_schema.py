@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 
 
-
 class ChatSchema(BaseModel):
     message: str = Field(..., description="사용자가 입력한 자연어 메시지")
 
@@ -15,6 +14,5 @@ class ChatSchema(BaseModel):
 
 
 class SmithCaptainSchema(BaseModel):
-    
     id: int = Field(0, description="Captain ID")
     name: str = Field("에드워드 스미스", description="Captain's name")

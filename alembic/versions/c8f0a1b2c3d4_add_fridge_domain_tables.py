@@ -7,14 +7,14 @@ Create Date: 2026-05-20
 backend/apps/fridge/models 와 동일 스키마.
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 from alembic import op
 
 revision: str = "c8f0a1b2c3d4"
-down_revision: Union[str, Sequence[str], None] = "b7e8f9a0c1d2"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "b7e8f9a0c1d2"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

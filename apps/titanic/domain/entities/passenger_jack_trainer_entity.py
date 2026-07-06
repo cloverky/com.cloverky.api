@@ -1,16 +1,17 @@
 """
 Entity — 동등성은 식별자(id)로 판단, VO를 조합해 도메인 규칙을 표현
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 from titanic.domain.value_objects.passenger_jack_trainer_vo import (
-    PassengerId,
-    PassengerName,
-    Gender,
     Age,
     FamilyRelation,
+    Gender,
+    PassengerId,
+    PassengerName,
     SurvivalStatus,
 )
 
@@ -18,10 +19,10 @@ from titanic.domain.value_objects.passenger_jack_trainer_vo import (
 @dataclass
 class PassengerEntity:
     id: int
-    passenger_id: Optional[PassengerId]
-    name: Optional[PassengerName]
+    passenger_id: PassengerId | None
+    name: PassengerName | None
     gender: Gender
-    age: Optional[Age]
+    age: Age | None
     family_relation: FamilyRelation
     survival_status: SurvivalStatus
     _domain_events: list = field(default_factory=list, init=False, repr=False)

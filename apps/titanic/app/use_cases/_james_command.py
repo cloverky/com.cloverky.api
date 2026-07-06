@@ -1,11 +1,13 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 
-from pathlib import Path
 from titanic.app.use_cases.train_use_case import JackService
 
 app = FastAPI(title="Titanic (James)")
 _DATA_DIR = Path(__file__).resolve().parent
 _MODEL_PATH = _DATA_DIR.parent / "models" / "titanic_decision_tree.joblib"
+
 
 class JamesController:
     def __init__(self):
@@ -25,4 +27,3 @@ class JamesController:
             "model": self.get_training_model_name(),
             "accuracy": self.get_training_model_accuracy(),
         }
-

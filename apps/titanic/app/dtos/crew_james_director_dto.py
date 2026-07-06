@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class PersonCommand:
     """Person 엔티티 — 3NF Person 테이블 컬럼 그대로 (타입은 str)."""
@@ -11,6 +12,7 @@ class PersonCommand:
     sib_sp: str
     parch: str
     survived: str
+
 
 @dataclass
 class BookingCommand:
@@ -25,12 +27,14 @@ class BookingCommand:
 
 @dataclass
 class JamesDirectorUploadResponse:
-    answer : str
+    answer: str
+
 
 @dataclass
 class JamesDirectorQuery:
     id: int
     name: str
+
 
 @dataclass
 class JamesDirectorResponse:

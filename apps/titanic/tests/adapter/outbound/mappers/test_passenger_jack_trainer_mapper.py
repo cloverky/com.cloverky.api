@@ -1,7 +1,11 @@
-import pytest
 from types import SimpleNamespace
 
-from titanic.adapter.outbound.mappers.passenger_jack_trainer_mapper import JackTrainerMapper
+import pytest
+
+from titanic.adapter.outbound.mappers.passenger_jack_trainer_mapper import (
+    JackTrainerMapper,
+)
+from titanic.domain.entities.passenger_jack_trainer_entity import PassengerEntity
 from titanic.domain.value_objects.passenger_jack_trainer_vo import (
     Age,
     FamilyRelation,
@@ -11,7 +15,6 @@ from titanic.domain.value_objects.passenger_jack_trainer_vo import (
     PassengerName,
     SurvivalStatus,
 )
-from titanic.domain.entities.passenger_jack_trainer_entity import PassengerEntity
 
 
 def _make_orm(**overrides):

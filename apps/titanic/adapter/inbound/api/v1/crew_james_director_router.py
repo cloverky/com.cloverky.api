@@ -1,30 +1,33 @@
-from io import StringIO
 import csv
+from io import StringIO
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from titanic.adapter.inbound.api.schemas.crew_james_director_schema import JamesDirectorSchema, TitanicRecordSchema
+from clover.apps.titanic.dependencies.crew_james_director import (
+    get_james_director_use_case,
+)
+from titanic.adapter.inbound.api.schemas.crew_james_director_schema import (
+    JamesDirectorSchema,
+    TitanicRecordSchema,
+)
 from titanic.app.ports.input.crew_james_director_use_case import JamesDirectorUseCase
-from clover.apps.titanic.dependencies.crew_james_director import get_james_director_use_case
 
-'''
+"""
  james_director_router.py
  전설적인 흥행작 <타이타닉>을 연출하여
  "내가 세상의 왕이다!"를 외친 제임스 카메론 감독의 라우터
  완벽주의 성향으로 타이타닉의 모든 세트와 디테일을
  고증한 아키텍처의 총괄 디렉터 역할 수행
-'''
+"""
 james_director_router = APIRouter(prefix="/james", tags=["james"])
+
 
 @james_director_router.get("/myself")
 async def introduce_myself(
-    james: JamesDirectorUseCase = Depends(get_james_director_use_case)
+    james: JamesDirectorUseCase = Depends(get_james_director_use_case),
 ):
     return await james.introduce_myself(
-        JamesDirectorSchema(
-            id=6,
-            name="제임스 카메론 (James Carmeron)"
-        )
+        JamesDirectorSchema(id=6, name="제임스 카메론 (James Carmeron)")
     )
 
 
@@ -46,6 +49,8 @@ def _parse_csv(text: str) -> list[TitanicRecordSchema]:
     if reader.fieldnames is None:
         raise HTTPException(status_code=400, detail="CSV 헤더를 읽을 수 없습니다.")
     return [
-        TitanicRecordSchema.model_validate({k.strip(): v for k, v in row.items() if k is not None})
+        TitanicRecordSchema.model_validate(
+            {k.strip(): v for k, v in row.items() if k is not None}
+        )
         for row in reader
     ]

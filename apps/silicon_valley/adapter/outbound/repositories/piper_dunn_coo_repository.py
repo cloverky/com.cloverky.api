@@ -5,6 +5,5 @@ from silicon_valley.app.ports.output.piper_dunn_coo_port import DunnCooPort
 
 
 class DunnCooPgRepository(DunnCooPort):
-
     async def introduce_myself(self, query: DunnCooQuery) -> DunnCooResponse:
         return DunnCooResponse(id=query.id, name=query.name)

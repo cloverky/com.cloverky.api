@@ -32,7 +32,7 @@ def _resolve_database_url() -> str:
             "DATABASE_URL 이 설정되지 않았습니다. "
             f"{_BACKEND_ROOT / '.env'} 에 Neon 연결 문자열을 넣어 주세요.",
         )
-        
+
     # SQLAlchemy 2.0 + psycopg(v3) 비동기 드라이버 규격 적용
     if url.startswith("postgresql://"):
         return url.replace("postgresql://", "postgresql+psycopg_async://", 1)
@@ -47,6 +47,7 @@ DATABASE_URL = _resolve_database_url()
 # 3. SQLAlchemy 2.0 스타일 Declarative Base 선언
 class Base(DeclarativeBase):
     """모든 DB 모델이 상속받을 최신 스타일의 Base 클래스"""
+
     pass
 
 
@@ -55,8 +56,8 @@ engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
     echo=False,
     pool_pre_ping=True,  # 💡 Neon 클라우드 연결이 끊겼는지 미리 체크 후 재연결 (필수)
-    pool_size=5,         # 기본 유지할 커넥션 개수
-    max_overflow=10,     # 트래픽 몰릴 때 추가 허용할 커넥션 개수
+    pool_size=5,  # 기본 유지할 커넥션 개수
+    max_overflow=10,  # 트래픽 몰릴 때 추가 허용할 커넥션 개수
 )
 
 # 5. 최신 2.0 전용 비동기 세션 팩토리 생성

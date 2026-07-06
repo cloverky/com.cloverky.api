@@ -1,8 +1,8 @@
 import logging
 
+from users.adapter.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.user import User
 from secom.app.schemas.user_schema import LoginResultSchema, LoginSchema, UserSchema
 from secom.app.services.user_service import UserService
 from secom.app.utils.log_helper import log_login_layer, log_save_user_layer
@@ -18,7 +18,9 @@ class UserController:
         log_save_user_layer("Controller", user_schema)
         logger.info("[Controller] → Service.save_user 호출")
         user = await self._user_service.save_user(db, user_schema)
-        logger.info("[Controller] save_user 완료 — id=%s username=%r", user.id, user.username)
+        logger.info(
+            "[Controller] save_user 완료 — id=%s username=%r", user.id, user.username
+        )
         return user
 
     async def login_user(

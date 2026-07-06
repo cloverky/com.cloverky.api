@@ -1,7 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class SurvivalResult(int, Enum):
@@ -11,15 +11,19 @@ class SurvivalResult(int, Enum):
 
 @dataclass(frozen=True)
 class SurvivalStatus:
-    value: Optional[SurvivalResult]
+    value: SurvivalResult | None
 
     @classmethod
-    def from_raw(cls, raw: Optional[str]) -> "SurvivalStatus":
+    def from_raw(cls, raw: str | None) -> SurvivalStatus:
         if raw is None or str(raw).strip() == "":
             return cls(value=None)
         mapping: dict[str, SurvivalResult] = {
-            "0": SurvivalResult.DIED, "false": SurvivalResult.DIED, "no": SurvivalResult.DIED,
-            "1": SurvivalResult.SURVIVED, "true": SurvivalResult.SURVIVED, "yes": SurvivalResult.SURVIVED,
+            "0": SurvivalResult.DIED,
+            "false": SurvivalResult.DIED,
+            "no": SurvivalResult.DIED,
+            "1": SurvivalResult.SURVIVED,
+            "true": SurvivalResult.SURVIVED,
+            "yes": SurvivalResult.SURVIVED,
         }
         normalized = str(raw).strip().lower()
         if normalized not in mapping:

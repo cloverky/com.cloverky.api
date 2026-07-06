@@ -1,20 +1,18 @@
 from __future__ import annotations
-from typing import Optional
 
 from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import JackTrainerOrm
 from titanic.domain.entities.passenger_jack_trainer_entity import PassengerEntity
 from titanic.domain.value_objects.passenger_jack_trainer_vo import (
-    PassengerId,
-    PassengerName,
-    Gender,
     Age,
     FamilyRelation,
+    Gender,
+    PassengerId,
+    PassengerName,
     SurvivalStatus,
 )
 
 
 class JackTrainerMapper:
-
     @staticmethod
     def to_entity(orm: JackTrainerOrm) -> PassengerEntity:
         return PassengerEntity(
@@ -31,13 +29,17 @@ class JackTrainerMapper:
         )
 
     @staticmethod
-    def to_orm(entity: PassengerEntity, existing: Optional[JackTrainerOrm] = None) -> JackTrainerOrm:
+    def to_orm(
+        entity: PassengerEntity, existing: JackTrainerOrm | None = None
+    ) -> JackTrainerOrm:
         # BUG: JackTrainerOrm has no 'id' column — raises TypeError (tracked as Red, fix pending)
         orm = existing or JackTrainerOrm(id=entity.id)
         orm.passenger_id = entity.passenger_id.value if entity.passenger_id else None
         orm.name = entity.name.value if entity.name else None
         orm.gender = str(entity.gender)
-        orm.age = str(entity.age.value) if entity.age and not entity.age.is_unknown else None
+        orm.age = (
+            str(entity.age.value) if entity.age and not entity.age.is_unknown else None
+        )
         orm.sib_sp = str(entity.family_relation.sib_sp)
         orm.parch = str(entity.family_relation.parch)
         orm.survived = str(entity.survival_status.survived)

@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class ReceiptPgRepository(ReceiptRepository):
-
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 

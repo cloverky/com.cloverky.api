@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
@@ -22,14 +20,14 @@ class BookingOrm(Base):
     __tablename__ = "bookings"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    passenger_id: Mapped[Optional[int]] = mapped_column(
+    passenger_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("passengers.id"), nullable=True
     )
-    pclass: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    ticket: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    fare: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    cabin: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    embarked: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    pclass: Mapped[str | None] = mapped_column(String, nullable=True)
+    ticket: Mapped[str | None] = mapped_column(String, nullable=True)
+    fare: Mapped[str | None] = mapped_column(String, nullable=True)
+    cabin: Mapped[str | None] = mapped_column(String, nullable=True)
+    embarked: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
 class XGBoostStrategy(RoseModelPort):
@@ -45,7 +43,6 @@ class XGBoostStrategy(RoseModelPort):
 
     def __init__(self) -> None:
         self._model = GradientBoostingClassifier(n_estimators=100, random_state=42)
-            
 
     def fit(self, X, y) -> None:
         self._model.fit(X, y)
@@ -94,7 +91,6 @@ class LightGBMStrategy(RoseModelPort):
 
     def __init__(self) -> None:
         self._model = GradientBoostingClassifier(n_estimators=100, random_state=42)
-            
 
     def fit(self, X, y) -> None:
         self._model.fit(X, y)
@@ -120,7 +116,6 @@ class CatBoostStrategy(RoseModelPort):
     def __init__(self) -> None:
         self._model = GradientBoostingClassifier(n_estimators=100, random_state=42)
 
-            
     def fit(self, X, y) -> None:
         self._model.fit(X, y)
 
@@ -273,6 +268,7 @@ class PCAKMeansStrategy(RoseModelPort):
 
     def fit(self, X, y) -> None:
         import numpy as np
+
         X_reduced = self._pca.fit_transform(self._scaler.fit_transform(X))
         self._kmeans.fit(X_reduced)
         y_arr = np.array(y)
@@ -283,7 +279,10 @@ class PCAKMeansStrategy(RoseModelPort):
 
     def predict(self, X) -> list[int]:
         X_reduced = self._pca.transform(self._scaler.transform(X))
-        return [self._cluster_to_label.get(int(c), 0) for c in self._kmeans.predict(X_reduced)]
+        return [
+            self._cluster_to_label.get(int(c), 0)
+            for c in self._kmeans.predict(X_reduced)
+        ]
 
     def predict_proba(self, X) -> list[float]:
         return [float(p) for p in self.predict(X)]

@@ -1,16 +1,17 @@
 """
 Entity — 동등성은 식별자(id)로 판단, VO를 조합해 도메인 규칙을 표현
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 from clover.apps.titanic.domain.value_objects.passenger_rose_model_vo import (
-    PassengerClass,
-    TicketNumber,
-    Fare,
     Cabin,
     Embarkation,
+    Fare,
+    PassengerClass,
+    TicketNumber,
 )
 
 
@@ -24,15 +25,15 @@ class Booking:
     """
 
     # ── 식별자 ──────────────────────────────────
-    _id: int                    # DB PK (인프라 관심사, 외부 노출 최소화)
-    person_id: int              # persons 테이블 FK
+    _id: int  # DB PK (인프라 관심사, 외부 노출 최소화)
+    person_id: int  # persons 테이블 FK
 
     # ── 도메인 속성 (VO) ─────────────────────────
     passenger_class: PassengerClass
-    ticket: Optional[TicketNumber]
-    fare: Optional[Fare]
-    cabin: Optional[Cabin]
-    embarkation: Optional[Embarkation]
+    ticket: TicketNumber | None
+    fare: Fare | None
+    cabin: Cabin | None
+    embarkation: Embarkation | None
 
     # ── 도메인 이벤트 수집 버퍼 ─────────────────
     _domain_events: list = field(default_factory=list, init=False, repr=False)
@@ -65,7 +66,9 @@ class Booking:
         return cls(
             _id=db_id,
             person_id=person_id,
-            passenger_class=PassengerClass(pclass) if pclass is not None else PassengerClass("3"),
+            passenger_class=PassengerClass(pclass)
+            if pclass is not None
+            else PassengerClass("3"),
             ticket=TicketNumber(ticket) if ticket is not None else None,
             fare=Fare(float(fare)) if fare is not None else None,
             cabin=Cabin(cabin) if cabin is not None else None,

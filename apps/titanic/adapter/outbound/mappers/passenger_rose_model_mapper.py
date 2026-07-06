@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import Optional
 
-from clover.apps.titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import RoseModelOrm
+from clover.apps.titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import (
+    RoseModelOrm,
+)
 
 
 class RoseModelMapper:
@@ -17,6 +18,6 @@ class RoseModelMapper:
         raise NotImplementedError("RoseModel 엔티티 정의 후 구현 필요")
 
     @staticmethod
-    def to_orm(entity, existing: Optional[RoseModelOrm] = None) -> RoseModelOrm:
+    def to_orm(entity, existing: RoseModelOrm | None = None) -> RoseModelOrm:
         # TODO: 도메인 엔티티 정의 후 구현
         raise NotImplementedError("RoseModel 엔티티 정의 후 구현 필요")

@@ -1,7 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class FareBand(int, Enum):
@@ -16,7 +16,7 @@ class Fare:
     value: float
 
     @classmethod
-    def from_raw(cls, raw: Optional[str | float]) -> "Fare":
+    def from_raw(cls, raw: str | float | None) -> Fare:
         if raw is None or str(raw).strip() == "":
             return cls(value=0.0)
         try:

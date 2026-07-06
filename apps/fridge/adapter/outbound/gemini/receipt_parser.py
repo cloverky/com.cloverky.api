@@ -4,9 +4,9 @@ from datetime import date
 
 from fastapi import HTTPException
 
+from core.matrix.wault_keymaker_serect_manager import get_keymaker
 from fridge.app.dtos.receipt_dto import ReceiptLineParsedDto, ReceiptParseResultDto
 from fridge.app.ports.output.receipt_parser import ReceiptParserPort
-from core.matrix.wault_keymaker_serect_manager import get_keymaker
 
 _RECEIPT_PROMPT = """이 영수증 이미지에서 구매 정보를 추출하세요.
 반드시 아래 JSON 형식만 출력하고 다른 설명은 하지 마세요.
@@ -42,7 +42,6 @@ def _parse_date(value: str | None) -> date | None:
 
 
 class GeminiReceiptParser(ReceiptParserPort):
-
     def parse(self, image_bytes: bytes, mime_type: str) -> ReceiptParseResultDto:
         keymaker = get_keymaker()
         if not keymaker.is_gemini_ready():
@@ -62,10 +61,14 @@ class GeminiReceiptParser(ReceiptParserPort):
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=502, detail=f"영수증 인식 실패: {e!s}") from e
+            raise HTTPException(
+                status_code=502, detail=f"영수증 인식 실패: {e!s}"
+            ) from e
 
         if not raw:
-            raise HTTPException(status_code=502, detail="영수증에서 텍스트를 읽지 못했습니다.")
+            raise HTTPException(
+                status_code=502, detail="영수증에서 텍스트를 읽지 못했습니다."
+            )
 
         try:
             data = _extract_json(raw)
@@ -87,7 +90,9 @@ class GeminiReceiptParser(ReceiptParserPort):
             except (TypeError, ValueError):
                 qty = 1
             unit = str(row.get("unit") or "개").strip() or "개"
-            items.append(ReceiptLineParsedDto(name=name, quantity=max(1, qty), unit=unit))
+            items.append(
+                ReceiptLineParsedDto(name=name, quantity=max(1, qty), unit=unit)
+            )
 
         store = data.get("store_name")
         store_name = str(store).strip() if store else None

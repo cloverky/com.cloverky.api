@@ -2,27 +2,30 @@ from __future__ import annotations
 
 import logging
 
+from users.adapter.user import User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from secom.app.utils.auth_password import hash_password
-from models.user import User
 from secom.app.schemas.user_schema import LoginSchema, UserSchema
+from secom.app.utils.auth_password import hash_password
 
 logger = logging.getLogger(__name__)
 
 
 class UserRepository:
-
     async def find_by_username(self, db: AsyncSession, username: str) -> User | None:
-        result = await db.execute(select(User).where(User.username == username).limit(1))
+        result = await db.execute(
+            select(User).where(User.username == username).limit(1)
+        )
         return result.scalar_one_or_none()
 
     async def find_by_email_address(self, db: AsyncSession, email: str) -> User | None:
         result = await db.execute(select(User).where(User.email == email).limit(1))
         return result.scalar_one_or_none()
 
-    async def find_by_email(self, db: AsyncSession, login_schema: LoginSchema) -> User | None:
+    async def find_by_email(
+        self, db: AsyncSession, login_schema: LoginSchema
+    ) -> User | None:
         result = await db.execute(
             select(User).where(User.email == login_schema.email).limit(1),
         )
@@ -40,5 +43,7 @@ class UserRepository:
         db.add(user)
         await db.commit()
         await db.refresh(user)
-        logger.info("[Repository] save_user 완료 — id=%s username=%r", user.id, user.username)
+        logger.info(
+            "[Repository] save_user 완료 — id=%s username=%r", user.id, user.username
+        )
         return user

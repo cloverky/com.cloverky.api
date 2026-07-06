@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 
 
 class PiperDunnCooSchema(BaseModel):
-
     id: int = Field(0, description="Character ID")
     name: str = Field("재러드 던", description="Character's name")
 
@@ -14,5 +13,6 @@ class PiperDunnCooSchema(BaseModel):
             }
         }
     }
+
 
 DunnCooSchema = PiperDunnCooSchema

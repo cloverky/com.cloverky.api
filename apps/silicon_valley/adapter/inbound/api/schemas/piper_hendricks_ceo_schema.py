@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 
 
 class PiperHendricksCeoSchema(BaseModel):
-
     id: int = Field(0, description="Character ID")
     name: str = Field("리처드 헨드릭스", description="Character's name")
 
@@ -14,5 +13,6 @@ class PiperHendricksCeoSchema(BaseModel):
             }
         }
     }
+
 
 HendricksCeoSchema = PiperHendricksCeoSchema

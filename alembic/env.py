@@ -41,19 +41,22 @@ def _get_sync_database_url() -> str:
             f"{_BACKEND_ROOT / '.env'} 에 Neon 연결 문자열을 넣어 주세요.",
         )
     # Alembic 은 동기 드라이버 사용 (앱은 psycopg_async 가능)
-    return (
-        url.replace("postgresql+psycopg_async://", "postgresql+psycopg://")
-        .replace("postgresql+asyncpg://", "postgresql+psycopg://")
+    return url.replace("postgresql+psycopg_async://", "postgresql+psycopg://").replace(
+        "postgresql+asyncpg://", "postgresql+psycopg://"
     )
 
 
 # 모델 메타데이터 — autogenerate 용
-from fridge.models.database import Base  # noqa: E402
+from models.user import User  # noqa: E402, F401
+
 from fridge.adapter.outbound.orm.category_orm import CategoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.food_orm import FoodOrm  # noqa: F401
 from fridge.adapter.outbound.orm.inventory_orm import InventoryOrm  # noqa: F401
-from fridge.adapter.outbound.orm.receipt_orm import ReceiptLineOrm, ReceiptOrm  # noqa: F401
-from models.user import User  # noqa: E402, F401
+from fridge.adapter.outbound.orm.receipt_orm import (  # noqa: F401
+    ReceiptLineOrm,
+    ReceiptOrm,
+)
+from fridge.models.database import Base  # noqa: E402
 from titanic.adapter.outbound.orm.booking_orm import BookingOrm  # noqa: F401
 from titanic.adapter.outbound.orm.person_orm import PersonOrm  # noqa: F401
 

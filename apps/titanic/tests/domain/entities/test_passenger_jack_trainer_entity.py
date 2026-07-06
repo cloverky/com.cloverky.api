@@ -1,4 +1,3 @@
-import pytest
 from types import SimpleNamespace
 
 from titanic.domain.entities.passenger_jack_trainer_entity import PassengerEntity
@@ -33,20 +32,45 @@ def _make_entity(
 
 class TestIsHighRisk:
     def test_male_adult_alone_is_high_risk(self):
-        assert _make_entity(gender_raw="male", age_value=30.0, sib_sp=0, parch=0).is_high_risk() is True
+        assert (
+            _make_entity(
+                gender_raw="male", age_value=30.0, sib_sp=0, parch=0
+            ).is_high_risk()
+            is True
+        )
 
     def test_female_adult_alone_is_not_high_risk(self):
-        assert _make_entity(gender_raw="female", age_value=30.0, sib_sp=0, parch=0).is_high_risk() is False
+        assert (
+            _make_entity(
+                gender_raw="female", age_value=30.0, sib_sp=0, parch=0
+            ).is_high_risk()
+            is False
+        )
 
     def test_male_minor_alone_is_not_high_risk(self):
-        assert _make_entity(gender_raw="male", age_value=15.0, sib_sp=0, parch=0).is_high_risk() is False
+        assert (
+            _make_entity(
+                gender_raw="male", age_value=15.0, sib_sp=0, parch=0
+            ).is_high_risk()
+            is False
+        )
 
     def test_male_adult_with_family_is_not_high_risk(self):
-        assert _make_entity(gender_raw="male", age_value=30.0, sib_sp=1, parch=0).is_high_risk() is False
+        assert (
+            _make_entity(
+                gender_raw="male", age_value=30.0, sib_sp=1, parch=0
+            ).is_high_risk()
+            is False
+        )
 
     def test_unknown_gender_adult_alone_is_high_risk(self):
         # 성별 미상은 여성이 아닌 것으로 처리 → 고위험군 해당
-        assert _make_entity(gender_raw=None, age_value=30.0, sib_sp=0, parch=0).is_high_risk() is True
+        assert (
+            _make_entity(
+                gender_raw=None, age_value=30.0, sib_sp=0, parch=0
+            ).is_high_risk()
+            is True
+        )
 
 
 class TestHasFamily:

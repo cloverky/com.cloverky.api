@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Generator
 from functools import lru_cache
 
 import ollama
 
 _MODEL = "exaone3.5:2.4b"
+_DEFAULT_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
 
 class FakerOrchestrator:
-    def __init__(self, host: str = "http://localhost:11434") -> None:
+    def __init__(self, host: str = _DEFAULT_HOST) -> None:
         self._client = ollama.Client(host=host)
         self._async_client = ollama.AsyncClient(host=host)
 

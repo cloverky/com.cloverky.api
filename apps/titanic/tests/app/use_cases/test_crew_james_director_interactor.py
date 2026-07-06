@@ -1,12 +1,16 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from titanic.app.use_cases.crew_james_director_interactor import JamesDirectorInteractor
-from titanic.app.dtos.crew_james_director_dto import JamesDirectorQuery, JamesDirectorResponse
+import pytest
+
 from titanic.adapter.inbound.api.schemas.crew_james_director_schema import (
     FileUploadSchema,
     JamesDirectorSchema,
 )
+from titanic.app.dtos.crew_james_director_dto import (
+    JamesDirectorQuery,
+    JamesDirectorResponse,
+)
+from titanic.app.use_cases.crew_james_director_interactor import JamesDirectorInteractor
 
 
 @pytest.fixture
@@ -44,7 +48,9 @@ def _schema(**overrides) -> FileUploadSchema:
 
 
 class TestIntroduceMyself:
-    async def test_calls_repository_with_correct_query(self, interactor, mock_repository):
+    async def test_calls_repository_with_correct_query(
+        self, interactor, mock_repository
+    ):
         schema = JamesDirectorSchema(id=4, name="James Cameron")
 
         await interactor.introduce_myself(schema)
@@ -54,20 +60,30 @@ class TestIntroduceMyself:
         )
 
     async def test_returns_repository_response(self, interactor):
-        response = await interactor.introduce_myself(JamesDirectorSchema(id=4, name="James Cameron"))
+        response = await interactor.introduce_myself(
+            JamesDirectorSchema(id=4, name="James Cameron")
+        )
 
         assert response.answer == "안녕하세요, 제임스입니다."
 
 
 class TestUploadTitanicFile:
-    async def test_creates_one_passenger_command_per_record(self, interactor, mock_repository):
-        await interactor.upload_titanic_file([_schema(passenger_id="1"), _schema(passenger_id="2")])
+    async def test_creates_one_passenger_command_per_record(
+        self, interactor, mock_repository
+    ):
+        await interactor.upload_titanic_file(
+            [_schema(passenger_id="1"), _schema(passenger_id="2")]
+        )
 
         person_commands, _ = mock_repository.receive_uploaded_records.call_args.args
         assert len(person_commands) == 2
 
-    async def test_passenger_command_contains_correct_fields(self, interactor, mock_repository):
-        await interactor.upload_titanic_file([_schema(passenger_id="7", gender="female", age="28")])
+    async def test_passenger_command_contains_correct_fields(
+        self, interactor, mock_repository
+    ):
+        await interactor.upload_titanic_file(
+            [_schema(passenger_id="7", gender="female", age="28")]
+        )
 
         person_commands, _ = mock_repository.receive_uploaded_records.call_args.args
         cmd = person_commands[0]
@@ -75,8 +91,12 @@ class TestUploadTitanicFile:
         assert cmd.gender == "female"
         assert cmd.age == "28"
 
-    async def test_booking_command_contains_correct_fields(self, interactor, mock_repository):
-        await interactor.upload_titanic_file([_schema(pclass="1", fare="100.0", embarked="C")])
+    async def test_booking_command_contains_correct_fields(
+        self, interactor, mock_repository
+    ):
+        await interactor.upload_titanic_file(
+            [_schema(pclass="1", fare="100.0", embarked="C")]
+        )
 
         _, booking_commands = mock_repository.receive_uploaded_records.call_args.args
         cmd = booking_commands[0]
@@ -88,7 +108,9 @@ class TestUploadTitanicFile:
         # None 값은 빈 문자열로 변환돼야 DB 커맨드가 일관성 유지
         await interactor.upload_titanic_file([_schema(survived=None, cabin=None)])
 
-        person_commands, booking_commands = mock_repository.receive_uploaded_records.call_args.args
+        person_commands, booking_commands = (
+            mock_repository.receive_uploaded_records.call_args.args
+        )
         assert person_commands[0].survived == ""
         assert booking_commands[0].cabin == ""
 

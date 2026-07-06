@@ -1,24 +1,29 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class TitleType(int, Enum):
     UNKNOWN = 0
-    MR     = 1
-    MISS   = 2
-    MRS    = 3
+    MR = 1
+    MISS = 2
+    MRS = 3
     MASTER = 4
-    ROYAL  = 5
-    RARE   = 6
+    ROYAL = 5
+    RARE = 6
 
 
-_RARE  = {"Capt", "Col", "Don", "Dr", "Major", "Rev", "Jonkheer", "Dona", "Mme"}
+_RARE = {"Capt", "Col", "Don", "Dr", "Major", "Rev", "Jonkheer", "Dona", "Mme"}
 _ROYAL = {"Countess", "Lady", "Sir"}
-_NORM  = {"Mlle": TitleType.MR, "Ms": TitleType.MISS,
-          "Mr": TitleType.MR, "Miss": TitleType.MISS,
-          "Mrs": TitleType.MRS, "Master": TitleType.MASTER}
+_NORM = {
+    "Mlle": TitleType.MR,
+    "Ms": TitleType.MISS,
+    "Mr": TitleType.MR,
+    "Miss": TitleType.MISS,
+    "Mrs": TitleType.MRS,
+    "Master": TitleType.MASTER,
+}
 
 
 @dataclass(frozen=True)
@@ -26,7 +31,7 @@ class Title:
     value: TitleType
 
     @classmethod
-    def from_raw(cls, raw: Optional[str]) -> "Title":
+    def from_raw(cls, raw: str | None) -> Title:
         if raw is None or raw.strip() == "":
             return cls(value=TitleType.UNKNOWN)
         t = raw.strip()

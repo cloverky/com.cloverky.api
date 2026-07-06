@@ -1,7 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class GenderType(str, Enum):
@@ -14,14 +14,16 @@ class Gender:
     value: GenderType
 
     @classmethod
-    def from_raw(cls, raw: Optional[str]) -> "Gender":
+    def from_raw(cls, raw: str | None) -> Gender:
         if raw is None or raw.strip() == "":
             raise ValueError("성별은 필수 값입니다.")
         normalized = raw.strip().lower()
         try:
             return cls(value=GenderType(normalized))
         except ValueError:
-            raise ValueError(f"성별은 'male' 또는 'female' 이어야 합니다. 입력값: {raw!r}")
+            raise ValueError(
+                f"성별은 'male' 또는 'female' 이어야 합니다. 입력값: {raw!r}"
+            )
 
     @property
     def is_female(self) -> bool:

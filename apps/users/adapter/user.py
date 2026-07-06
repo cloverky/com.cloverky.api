@@ -1,10 +1,9 @@
 import enum
 from datetime import datetime
 
+from database import Base
 from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
-
-from database import Base
 from users.adapter.entity_id import EntityIdMixin
 
 

@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 
 
 class PiperBighettiHrSchema(BaseModel):
-
     id: int = Field(0, description="Character ID")
     name: str = Field("빅 헤드", description="Character's name")
 
@@ -14,5 +13,6 @@ class PiperBighettiHrSchema(BaseModel):
             }
         }
     }
+
 
 BighettiHrSchema = PiperBighettiHrSchema

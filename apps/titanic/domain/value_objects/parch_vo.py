@@ -1,6 +1,6 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -8,7 +8,7 @@ class Parch:
     value: int
 
     @classmethod
-    def from_raw(cls, raw: Optional[str | int]) -> "Parch":
+    def from_raw(cls, raw: str | int | None) -> Parch:
         if raw is None or str(raw).strip() == "":
             return cls(value=0)
         try:

@@ -139,13 +139,28 @@ def fetch_seoul_weather(
     """항상 dict 반환 — OpenWeather → Open-Meteo → 고정 기본값."""
     if openweather_appid:
         try:
-            return fetch_openweather(appid=openweather_appid, city=city, country=country)
-        except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+            return fetch_openweather(
+                appid=openweather_appid, city=city, country=country
+            )
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            json.JSONDecodeError,
+            KeyError,
+            TypeError,
+            ValueError,
+        ) as e:
             logger.warning("OpenWeather 실패, Open-Meteo 폴백: %s", e)
 
     try:
         return fetch_open_meteo_seoul()
-    except (urllib.error.URLError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+    except (
+        urllib.error.URLError,
+        json.JSONDecodeError,
+        KeyError,
+        TypeError,
+        ValueError,
+    ) as e:
         logger.warning("Open-Meteo 실패, 정적 폴백: %s", e)
 
     return _static_seoul_fallback()

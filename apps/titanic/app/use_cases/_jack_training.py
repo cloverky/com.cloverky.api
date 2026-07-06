@@ -19,7 +19,17 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
-FEATURE_NAMES = ["pclass", "gender", "age", "sibsp", "parch", "fare", "family_size", "is_alone", "age_bin"]
+FEATURE_NAMES = [
+    "pclass",
+    "gender",
+    "age",
+    "sibsp",
+    "parch",
+    "fare",
+    "family_size",
+    "is_alone",
+    "age_bin",
+]
 
 
 def clean_training_data(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -30,15 +40,19 @@ def clean_training_data(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
             survived = _to_int(row.get("survived"))
             if survived not in (0, 1):
                 continue
-            cleaned.append({
-                "pclass":   _to_int(row.get("pclass")) or 3,
-                "gender":   1 if str(row.get("gender", "")).lower() in ("female", "f") else 0,
-                "age":      _to_float(row.get("age")),
-                "sibsp":    _to_int(row.get("sibsp")) or 0,
-                "parch":    _to_int(row.get("parch")) or 0,
-                "fare":     _to_float(row.get("fare")),
-                "survived": survived,
-            })
+            cleaned.append(
+                {
+                    "pclass": _to_int(row.get("pclass")) or 3,
+                    "gender": 1
+                    if str(row.get("gender", "")).lower() in ("female", "f")
+                    else 0,
+                    "age": _to_float(row.get("age")),
+                    "sibsp": _to_int(row.get("sibsp")) or 0,
+                    "parch": _to_int(row.get("parch")) or 0,
+                    "fare": _to_float(row.get("fare")),
+                    "survived": survived,
+                }
+            )
         except Exception:
             continue
 
@@ -54,24 +68,38 @@ def clean_training_data(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return cleaned
 
 
-def build_feature_matrix(records: list[dict[str, Any]]) -> tuple[np.ndarray, np.ndarray]:
+def build_feature_matrix(
+    records: list[dict[str, Any]],
+) -> tuple[np.ndarray, np.ndarray]:
     """피처 엔지니어링(titanic-algorithm.md) → 행렬 변환."""
     X_rows, y_rows = [], []
     for r in records:
         age = r["age"]
         family_size = r["sibsp"] + r["parch"] + 1
-        age_bin = 0 if age < 16 else 1 if age < 30 else 2 if age < 45 else 3 if age < 60 else 4
-        X_rows.append([
-            r["pclass"],
-            r["gender"],
-            age,
-            r["sibsp"],
-            r["parch"],
-            r["fare"],
-            family_size,
-            1 if family_size == 1 else 0,  # is_alone
-            age_bin,
-        ])
+        age_bin = (
+            0
+            if age < 16
+            else 1
+            if age < 30
+            else 2
+            if age < 45
+            else 3
+            if age < 60
+            else 4
+        )
+        X_rows.append(
+            [
+                r["pclass"],
+                r["gender"],
+                age,
+                r["sibsp"],
+                r["parch"],
+                r["fare"],
+                family_size,
+                1 if family_size == 1 else 0,  # is_alone
+                age_bin,
+            ]
+        )
         y_rows.append(r["survived"])
     return np.array(X_rows, dtype=float), np.array(y_rows, dtype=int)
 
@@ -85,39 +113,56 @@ def build_supervised_classifiers() -> dict[str, Any]:
     return {
         # 1. XGBoost  → GradientBoostingClassifier (규제 포함 부스팅)
         "XGBoost": GradientBoostingClassifier(
-            n_estimators=200, learning_rate=0.05, max_depth=4,
-            subsample=0.8, random_state=42,
+            n_estimators=200,
+            learning_rate=0.05,
+            max_depth=4,
+            subsample=0.8,
+            random_state=42,
         ),
         # 2. Random Forest
         "RandomForest": RandomForestClassifier(
-            n_estimators=200, max_depth=6, random_state=42,
+            n_estimators=200,
+            max_depth=6,
+            random_state=42,
         ),
         # 3. LightGBM  → HistGradientBoostingClassifier (리프 중심 고속 부스팅)
         "LightGBM": HistGradientBoostingClassifier(
-            max_iter=200, learning_rate=0.05, max_depth=4, random_state=42,
+            max_iter=200,
+            learning_rate=0.05,
+            max_depth=4,
+            random_state=42,
         ),
         # 4. CatBoost  → GradientBoostingClassifier (범주형 특화 파라미터)
         "CatBoost": GradientBoostingClassifier(
-            n_estimators=200, learning_rate=0.05, max_depth=5,
-            min_samples_leaf=5, random_state=42,
+            n_estimators=200,
+            learning_rate=0.05,
+            max_depth=5,
+            min_samples_leaf=5,
+            random_state=42,
         ),
         # 5. Logistic Regression (표준화 파이프라인)
-        "LogisticRegression": Pipeline([
-            ("scaler", StandardScaler()),
-            ("clf", LogisticRegression(max_iter=1000, random_state=42)),
-        ]),
+        "LogisticRegression": Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("clf", LogisticRegression(max_iter=1000, random_state=42)),
+            ]
+        ),
         # 6. Decision Tree
         "DecisionTree": DecisionTreeClassifier(max_depth=5, random_state=42),
         # 7. SVM (표준화 필수)
-        "SVM": Pipeline([
-            ("scaler", StandardScaler()),
-            ("clf", SVC(kernel="rbf", C=1.0, random_state=42)),
-        ]),
+        "SVM": Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("clf", SVC(kernel="rbf", C=1.0, random_state=42)),
+            ]
+        ),
         # 8. KNN (표준화 필수)
-        "KNN": Pipeline([
-            ("scaler", StandardScaler()),
-            ("clf", KNeighborsClassifier(n_neighbors=7)),
-        ]),
+        "KNN": Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("clf", KNeighborsClassifier(n_neighbors=7)),
+            ]
+        ),
         # 9. Naive Bayes
         "NaiveBayes": GaussianNB(),
     }
@@ -142,7 +187,7 @@ def fit_supervised_classifiers(
         fitted_models[name] = clf
         cv_results[name] = {
             "cv_accuracy": round(float(scores.mean()), 4),
-            "cv_std":      round(float(scores.std()), 4),
+            "cv_std": round(float(scores.std()), 4),
         }
     return fitted_models, cv_results
 
@@ -163,9 +208,9 @@ def fit_kmeans_pca(X_train: np.ndarray, y_train: np.ndarray) -> dict[str, Any]:
     rate_c0 = float(y_train[labels == 0].mean()) if (labels == 0).any() else 0.0
     rate_c1 = float(y_train[labels == 1].mean()) if (labels == 1).any() else 0.0
     return {
-        "scaler":           scaler,
-        "pca":              pca,
-        "kmeans":           kmeans,
+        "scaler": scaler,
+        "pca": pca,
+        "kmeans": kmeans,
         "survived_cluster": 0 if rate_c0 > rate_c1 else 1,
     }
 

@@ -1,7 +1,12 @@
 from typing import Any
 
-from titanic.adapter.inbound.api.schemas.crew_walter_roaster_schema import WalterRoasterSchema
-from titanic.app.dtos.crew_walter_roaster_dto import WalterRoasterQuery, WalterRoasterResponse
+from titanic.adapter.inbound.api.schemas.crew_walter_roaster_schema import (
+    WalterRoasterSchema,
+)
+from titanic.app.dtos.crew_walter_roaster_dto import (
+    WalterRoasterQuery,
+    WalterRoasterResponse,
+)
 from titanic.app.ports.input.crew_walter_roaster_use_case import WalterRoasterUseCase
 from titanic.app.ports.output.crew_walter_roaster_port import WalterRoasterPort
 
@@ -21,7 +26,6 @@ class WalterQuery:
 
 
 class WalterRoasterInteractor(WalterRoasterUseCase):
-
     def __init__(self, repository: WalterRoasterPort) -> None:
         self.repository = repository
 
@@ -34,9 +38,13 @@ class WalterRoasterInteractor(WalterRoasterUseCase):
     async def get_total_count(self) -> int:
         return await self.repository.get_total_count()
 
-    async def introduce_myself(self, schema: WalterRoasterSchema) -> WalterRoasterResponse:
-        return await self.repository.introduce_myself(WalterRoasterQuery(
-            id=schema.id,
-            name=schema.name,
-            memo=schema.memo,
-        ))
+    async def introduce_myself(
+        self, schema: WalterRoasterSchema
+    ) -> WalterRoasterResponse:
+        return await self.repository.introduce_myself(
+            WalterRoasterQuery(
+                id=schema.id,
+                name=schema.name,
+                memo=schema.memo,
+            )
+        )

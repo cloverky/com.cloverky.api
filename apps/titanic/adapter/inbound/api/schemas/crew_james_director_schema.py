@@ -36,7 +36,9 @@ class TitanicRecordSchema(BaseModel):
     cabin: str | None = Field(default=None, validation_alias="Cabin")
     embarked: str | None = Field(default=None, validation_alias="Embarked")
 
-    @field_validator("passenger_id", "survived", "pclass", "sib_sp", "parch", mode="before")
+    @field_validator(
+        "passenger_id", "survived", "pclass", "sib_sp", "parch", mode="before"
+    )
     @classmethod
     def coerce_int(cls, value: Any) -> int:
         return int(str(value).strip())
@@ -74,7 +76,7 @@ class TitanicRecordSchema(BaseModel):
 
 
 class JamesDirectorSchema(BaseModel):
-    id : int = Field(0, description="Musician ID")
+    id: int = Field(0, description="Musician ID")
     name: str = Field("제임스 캡틴", description="Titanic Director")
 
     model_config = {
@@ -85,6 +87,7 @@ class JamesDirectorSchema(BaseModel):
             }
         }
     }
+
 
 class JamesDirectorUploadResponseSchema(BaseModel):
     message: str

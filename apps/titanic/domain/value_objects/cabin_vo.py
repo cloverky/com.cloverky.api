@@ -1,7 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class DeckZone(str, Enum):
@@ -21,7 +21,7 @@ class Cabin:
     deck: DeckZone
 
     @classmethod
-    def from_raw(cls, raw: Optional[str]) -> "Cabin":
+    def from_raw(cls, raw: str | None) -> Cabin:
         if raw is None or raw.strip() == "":
             return cls(value="Unknown", deck=DeckZone.UNKNOWN)
         stripped = raw.strip()

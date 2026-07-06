@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
-class PassengerIsidorCoupleSchema(BaseModel):
 
+class PassengerIsidorCoupleSchema(BaseModel):
     id: int = Field(0, description="Passenger ID")
     name: str = Field("이시도르 스트라우스", description="Passenger's name")
 
@@ -13,5 +13,6 @@ class PassengerIsidorCoupleSchema(BaseModel):
             }
         }
     }
+
 
 IsidorCoupleSchema = PassengerIsidorCoupleSchema

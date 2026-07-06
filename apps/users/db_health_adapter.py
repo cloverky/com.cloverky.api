@@ -10,6 +10,9 @@ class DbHealthAdapter:
         try:
             result = await db.execute(text("SELECT NOW();"))
             now = result.scalar()
-            return {"status": "success", "neon_time": str(now) if now is not None else None}
+            return {
+                "status": "success",
+                "neon_time": str(now) if now is not None else None,
+            }
         except Exception as e:
             return {"status": "error", "message": str(e)}

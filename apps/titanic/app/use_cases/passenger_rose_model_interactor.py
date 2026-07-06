@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from titanic.adapter.inbound.api.schemas.passenger_rose_model_schemas import RoseModelSchema
+from titanic.adapter.inbound.api.schemas.passenger_rose_model_schemas import (
+    RoseModelSchema,
+)
 from titanic.app.dtos.passenger_rose_model_dto import (
     PassengerPredictionCommand,
     RoseModelQuery,
@@ -13,15 +15,16 @@ from titanic.app.use_cases._ml_strategy import STRATEGY_REGISTRY
 
 
 class RoseModelInteractor(RoseModelUseCase):
-
     def __init__(self, repository: RoseModelPort):
         self.repository = repository
 
     async def introduce_myself(self, schema: RoseModelSchema) -> RoseModelResponse:
-        return await self.repository.introduce_myself(RoseModelQuery(
-            id=schema.id,
-            name=schema.name,
-        ))
+        return await self.repository.introduce_myself(
+            RoseModelQuery(
+                id=schema.id,
+                name=schema.name,
+            )
+        )
 
     async def predict_survival(
         self,
@@ -31,5 +34,7 @@ class RoseModelInteractor(RoseModelUseCase):
         strategy = STRATEGY_REGISTRY.get(algorithm.lower())
         if strategy is None:
             available = ", ".join(STRATEGY_REGISTRY.keys())
-            raise ValueError(f"알 수 없는 알고리즘 '{algorithm}'. 사용 가능: {available}")
+            raise ValueError(
+                f"알 수 없는 알고리즘 '{algorithm}'. 사용 가능: {available}"
+            )
         return strategy.predict(command)

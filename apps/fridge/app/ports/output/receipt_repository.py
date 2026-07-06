@@ -6,7 +6,6 @@ from clover.apps.fridge.app.dtos.receipt_dto import ReceiptQuery, ReceiptUploadR
 
 
 class ReceiptRepository(ABC):
-
     @abstractmethod
     async def get_status(self, query: ReceiptQuery) -> ReceiptUploadResponse:
         pass

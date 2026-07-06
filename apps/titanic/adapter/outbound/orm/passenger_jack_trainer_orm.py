@@ -2,8 +2,8 @@
 인프라 레이어 — ORM ↔ Domain Entity 변환 (Anti-Corruption Layer)
 도메인 객체가 SQLAlchemy를 직접 의존하지 않도록 매핑 책임을 여기서 담당.
 """
+
 from __future__ import annotations
-from typing import Optional
 
 from sqlalchemy import String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column

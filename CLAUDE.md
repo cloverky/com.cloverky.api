@@ -296,6 +296,44 @@ secom을 fridge/titanic 구조로 옮기는 작업은 **별도 요청 시** 진�
 
 ---
 
+## 스타 토폴로지 아키텍처 (Star Topology)
+
+> **하네스 엔지니어링 원칙**: 허브-스포크 의존성 규칙을 린터(`import-linter`)와 검증 스크립트(`scripts/validate-harness.py`)가 자동으로 강제한다.
+
+### 역할 정의
+
+| 구분 | 앱 | 역할 |
+|------|----|------|
+| **Hub** | `star_craft` | 전역 컨텍스트 라우팅, 온톨로지 인덱스, 크로스-스포크 오케스트레이션 |
+| **Spoke** | `fridge`, `titanic`, `secom`, `doro`, `friday_13th`, `imitation_game`, `inception`, `lion_king`, `silicon_valley`, `users` | 허브에 연결되는 독립 도메인 |
+
+### 의존성 규칙 (엄격히 준수)
+
+```
+spoke  →  star_craft (Hub)   ✅ 허용 — 스포크는 허브를 import할 수 있다
+star_craft  →  spoke          ✅ 허용 — 허브는 스포크를 조율한다
+spoke  →  spoke               ❌ 금지 — 스포크 간 직접 import 불가
+```
+
+**스포크 간 공유가 필요한 로직**은 반드시 `star_craft` 또는 `clover.core.*`를 경유한다.
+
+### 하네스 도구
+
+| 도구 | 설정 파일 | 검사 대상 |
+|------|-----------|-----------|
+| `import-linter` | `clover/.importlinter` | Python import 의존성 위반 |
+| `markdownlint` | `.markdownlint.yaml` | MD 프론트매터·링크 구조 |
+| `prettier` | `.prettierrc` | MD 포맷 일관성 |
+| `validate-harness` | `scripts/validate-harness.py` | 온톨로지 토폴로지 위반·고립 노드·순환 참조 |
+
+```bash
+# 하네스 전체 검증
+cd clover && python -m importlinter
+python scripts/validate-harness.py
+```
+
+---
+
 ## 요청 흐름 (fridge inventory 예시)
 
 ```

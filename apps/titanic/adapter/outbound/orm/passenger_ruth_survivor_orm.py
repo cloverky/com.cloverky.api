@@ -1,5 +1,5 @@
 from clover.core.matrix.grid_neo_theone_base import Base
 
-class RuthSurvivorOrm(Base):
 
+class RuthSurvivorOrm(Base):
     __atablename__ = True

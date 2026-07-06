@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class UserPgRepository(UserRepository):
-
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 

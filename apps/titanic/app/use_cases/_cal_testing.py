@@ -35,12 +35,17 @@ def evaluate_classifier(
 
     tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     return {
-        "accuracy":  round(float(accuracy_score(y_test, y_pred)), 4),
+        "accuracy": round(float(accuracy_score(y_test, y_pred)), 4),
         "precision": round(float(precision_score(y_test, y_pred, zero_division=0)), 4),
-        "recall":    round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
-        "f1":        round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
-        "roc_auc":   auc,
-        "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+        "recall": round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
+        "f1": round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
+        "roc_auc": auc,
+        "confusion_matrix": {
+            "tn": int(tn),
+            "fp": int(fp),
+            "fn": int(fn),
+            "tp": int(tp),
+        },
     }
 
 
@@ -63,8 +68,12 @@ def evaluate_kmeans_pca(
     train_labels = kmeans.fit_predict(X_train_pca)
 
     # 학습 세트 기준 클러스터 → 생존 레이블 매핑
-    rate_c0 = float(y_train[train_labels == 0].mean()) if (train_labels == 0).any() else 0.0
-    rate_c1 = float(y_train[train_labels == 1].mean()) if (train_labels == 1).any() else 0.0
+    rate_c0 = (
+        float(y_train[train_labels == 0].mean()) if (train_labels == 0).any() else 0.0
+    )
+    rate_c1 = (
+        float(y_train[train_labels == 1].mean()) if (train_labels == 1).any() else 0.0
+    )
     survived_cluster = 0 if rate_c0 > rate_c1 else 1
 
     test_labels = kmeans.predict(X_test_pca)
@@ -72,13 +81,20 @@ def evaluate_kmeans_pca(
 
     tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     return {
-        "accuracy":  round(float(accuracy_score(y_test, y_pred)), 4),
+        "accuracy": round(float(accuracy_score(y_test, y_pred)), 4),
         "precision": round(float(precision_score(y_test, y_pred, zero_division=0)), 4),
-        "recall":    round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
-        "f1":        round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
-        "roc_auc":   None,
-        "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
-        "pca_explained_variance": [round(float(v), 4) for v in pca.explained_variance_ratio_],
+        "recall": round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
+        "f1": round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
+        "roc_auc": None,
+        "confusion_matrix": {
+            "tn": int(tn),
+            "fp": int(fp),
+            "fn": int(fn),
+            "tp": int(tp),
+        },
+        "pca_explained_variance": [
+            round(float(v), 4) for v in pca.explained_variance_ratio_
+        ],
     }
 
 
@@ -96,12 +112,17 @@ def evaluate_fitted_classifier(
         auc = None
     tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     return {
-        "accuracy":  round(float(accuracy_score(y_test, y_pred)), 4),
+        "accuracy": round(float(accuracy_score(y_test, y_pred)), 4),
         "precision": round(float(precision_score(y_test, y_pred, zero_division=0)), 4),
-        "recall":    round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
-        "f1":        round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
-        "roc_auc":   auc,
-        "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+        "recall": round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
+        "f1": round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
+        "roc_auc": auc,
+        "confusion_matrix": {
+            "tn": int(tn),
+            "fp": int(fp),
+            "fn": int(fn),
+            "tp": int(tp),
+        },
     }
 
 
@@ -117,12 +138,17 @@ def evaluate_fitted_kmeans_pca(
     y_pred = (labels == fitted["survived_cluster"]).astype(int)
     tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     return {
-        "accuracy":  round(float(accuracy_score(y_test, y_pred)), 4),
+        "accuracy": round(float(accuracy_score(y_test, y_pred)), 4),
         "precision": round(float(precision_score(y_test, y_pred, zero_division=0)), 4),
-        "recall":    round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
-        "f1":        round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
-        "roc_auc":   None,
-        "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+        "recall": round(float(recall_score(y_test, y_pred, zero_division=0)), 4),
+        "f1": round(float(f1_score(y_test, y_pred, zero_division=0)), 4),
+        "roc_auc": None,
+        "confusion_matrix": {
+            "tn": int(tn),
+            "fp": int(fp),
+            "fn": int(fn),
+            "tp": int(tp),
+        },
     }
 
 

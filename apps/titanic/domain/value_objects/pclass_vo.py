@@ -1,7 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class PClassType(int, Enum):
@@ -15,7 +15,7 @@ class PClass:
     value: PClassType
 
     @classmethod
-    def from_raw(cls, raw: Optional[str]) -> "PClass":
+    def from_raw(cls, raw: str | None) -> PClass:
         if raw is None or raw.strip() == "":
             raise ValueError("PClass는 필수 값입니다.")
         try:

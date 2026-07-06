@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 
 
 class PiperGilfoyleSysSchema(BaseModel):
-
     id: int = Field(0, description="Character ID")
     name: str = Field("버트람 길포일", description="Character's name")
 
@@ -14,5 +13,6 @@ class PiperGilfoyleSysSchema(BaseModel):
             }
         }
     }
+
 
 GilfoyleSysSchema = PiperGilfoyleSysSchema
