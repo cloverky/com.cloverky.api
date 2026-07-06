@@ -42,7 +42,7 @@ class FaceTrainInteractor(FaceTrainUseCase):
 
     async def detect(self, image_path: str) -> list[dict]:
         def _run_detect() -> list[dict]:
-            model = YOLO("yolo11n-face.pt")
+            model = YOLO("yolo11n.pt")
             results = model(image_path)
             detections = []
             for r in results:
